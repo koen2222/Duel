@@ -36,6 +36,9 @@ jobs:
         run: |
           npm ci
           node smoke.mjs ../dist
+      - name: Online-test (twee spelers via een kamercode)
+        working-directory: test
+        run: node online.mjs ../dist
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:

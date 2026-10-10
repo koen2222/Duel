@@ -24,7 +24,7 @@ Bijgewerkt: 2026-10-10. Issues op GitHub hebben labels `bron`, `bug`, `online`, 
 Zie `docs/ONLINE.md`.
 - [ ] Regels scheiden van UI: `applyAction(state, action)` puur en serialiseerbaar.
 - [ ] Toeval via host/server (geen `Math.random()` bij de client die aanvalt).
-- [ ] Prototype P2P met kamercode.
+- [x] Prototype P2P met kamercode (#10): lockstep met gedeeld startgetal, zie `docs/ONLINE.md`.
 - [ ] Herverbinden, en later matchmaking/ranglijst.
 
 ## Fase 4 — Bordspel (label `bordspel`)

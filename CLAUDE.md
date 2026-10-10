@@ -13,6 +13,7 @@ Live: https://koen2222.github.io/Duel/ (GitHub Pages vanaf `main`, root).
 - `index.html` en `assets/` in de root, `tools/rehash.py` — de oude Grok-build. Alleen nog live zolang Pages op "Deploy from a branch" staat; na de overstap naar GitHub Actions overbodig.
 - `docs/ARCHITECTUUR.md` — hoe de code werkt. `docs/REGELS.md` — regels uit de code. `docs/ROADMAP.md` — fases. `docs/ONLINE.md` — onlineontwerp. `docs/LOG.md` — samenwerkingslog.
 - `print/` — bordspel-printbestanden.
+- **Online** (`src/online.js` + sectie ONLINE in `src/engine.js`, zie `docs/ONLINE.md`): beide spelers draaien de engine en moeten precies hetzelfde doen. Toeval in de spelregels dus nooit los met `Math.random()` maar via de schijf (`spin()`, gedeelde toevalsbron); voor animaties en geluid mag `Math.random()` wel.
 
 ## Werkwijze
 1. Pak een issue (of maak er een). Zet in een comment dat je ermee bezig bent.
@@ -21,7 +22,8 @@ Live: https://koen2222.github.io/Duel/ (GitHub Pages vanaf `main`, root).
 4. **Breek de live versie nooit**: `main` = wat spelers zien. Wijzig de bron in `src/`, niet de gebouwde bestanden. Test lokaal vóór merge:
    `npm install` en dan `npm run dev` → open http://localhost:5173/Duel/ en speel een potje inclusief een gevecht (let op de console). Of de echte build: `npm run build && npm run preview`.
    **Rooktest (verplicht vóór merge):** `npm run build`, dan `cd test && npm install && node smoke.mjs ../dist` — speelt headless een heel solo-potje via echte klikken (serveert de map onder `/Duel/`) en faalt bij JS-fouten of als er geen gevecht was. Zonder map test hij de oude build in de root. Live testen: `BASE_URL=https://koen2222.github.io/Duel/ node smoke.mjs`. Chrome-pad via `CHROME=...`.
-   GitHub draait de build en de rooktest bij elke PR ("Bouwen en publiceren"). Alleen mergen als die groen is. Vite geeft de bestanden zelf een hash in hun naam, dus cache-busting gaat vanzelf.
+   **Online-test:** `cd test && node online.mjs ../dist` — twee browsers spelen via een kamercode (eigen PeerServer, geen internet nodig) en het bord wordt na elke zet aan beide kanten vergeleken. Raak je de engine aan, draai deze dan ook: online werkt alleen als beide kanten precies hetzelfde doen.
+   GitHub draait de build, de rooktest en de online-test bij elke PR ("Bouwen en publiceren"). Alleen mergen als die groen is. Vite geeft de bestanden zelf een hash in hun naam, dus cache-busting gaat vanzelf.
 5. Werk `docs/LOG.md` bij (datum, wie, wat, open punten) en de relevante docs.
 6. Kleine commits, Nederlandse commitberichten.
 
