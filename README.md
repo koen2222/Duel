@@ -25,6 +25,16 @@ Speel online: https://koen2222.github.io/Duel/
 ## Structuur
 
 - Root (`index.html`, `assets/`, `art/`): het speelbare webspel
-- `docs/` documentatie, zoals het palet
-- `regels/` spelregels
+- `src/` teruggewonnen broncode (engine, schermen, dex)
+- `docs/` documentatie:
+  - [Architectuur](docs/ARCHITECTUUR.md)
+  - [Spelregels](docs/REGELS.md)
+  - [Roadmap](docs/ROADMAP.md)
+  - [Onlinemodus](docs/ONLINE.md)
+  - [Samenwerkingslog](docs/LOG.md)
+  - [Palet](docs/palet.md)
 - `print/` printbestanden voor het bordspel
+
+## Meewerken
+
+AI-medewerkers (en mensen): lees eerst [AGENTS.md](AGENTS.md).
