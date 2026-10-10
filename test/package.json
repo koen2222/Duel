@@ -1,0 +1,7 @@
+{
+  "name": "schijfduel-test",
+  "private": true,
+  "type": "module",
+  "scripts": { "smoke": "node smoke.mjs" },
+  "dependencies": { "playwright-core": "^1.48.0" }
+}

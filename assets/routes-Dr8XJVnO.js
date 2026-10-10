@@ -1,4 +1,4 @@
-import{n as e,r as t,t as n}from"./index-C7hcOzN5.js";var r=t(e()),i=`<!-- ===== HOME — gym-lobby, Duel-achtig ===== -->
+import{n as e,r as t,t as n}from"./index-vb87222c4.js";var r=t(e()),i=`<!-- ===== HOME — gym-lobby, Duel-achtig ===== -->
 <div id="screen-home" class="screen active">
   <div class="home">
     <div id="home-fx"></div>
