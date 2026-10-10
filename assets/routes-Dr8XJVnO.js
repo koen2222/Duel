@@ -4916,6 +4916,7 @@ async function runCombat(att, def) {
     if (flash) { flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); }
   }
 
+  const [aIdx, dIdx] = await Promise.all([spin(attDiskId, 1600 + Math.random()*300), spin(defDiskId, 1900 + Math.random()*300)]);
   let finalAIdx = aIdx, finalDIdx = dIdx;
 
   // HERKANSINGEN (Duel: Double Chance / Bright Powder). Tweede Kans laat je
