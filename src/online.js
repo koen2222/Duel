@@ -19,6 +19,10 @@ let eigenTeam = null, tegenTeam = null, gestart = false;
 // Ruim gekozen, zodat even naar een andere app gaan geen verlies kost.
 const STILTE_MS = (Number(new URLSearchParams(location.search).get('stilte')) || 45) * 1000;
 let hartslag = null, laatstGehoord = 0;
+// Begroeting: een bericht dat precies bij het openen van het kanaal wordt
+// verstuurd, komt soms niet aan. Daarom herhalen we 'hallo' elke seconde tot
+// die van de ander binnen is (heb = 'ik heb de jouwe al').
+let halloOntvangen = false, halloTimer = null;
 
 // PeerJS pas laden als iemand online wil spelen.
 const laadPeer = () => import('peerjs').then((m) => m.Peer);
@@ -69,6 +73,7 @@ function sluitScherm() { $('online-overlay').classList.remove('active'); }
 
 function stop() {
   clearInterval(hartslag); hartslag = null;
+  clearInterval(halloTimer); halloTimer = null;
   const c = verbinding, p = peer;
   verbinding = null; peer = null; rol = null; eigenTeam = null; tegenTeam = null; gestart = false;
   try { if (c) c.close(); } catch { /* al dicht */ }
@@ -116,7 +121,11 @@ function koppel(c) {
   c.on('open', () => {
     if (verbinding !== c) return;
     zetStatus(tekst('Verbonden!', 'Connected!'));
-    c.send({ t: 'hallo', versie });
+    halloOntvangen = false;
+    const groet = () => { if (verbinding === c && !halloOntvangen) zend({ t: 'hallo', versie, heb: false }); else clearInterval(halloTimer); };
+    clearInterval(halloTimer);
+    groet();
+    halloTimer = setInterval(groet, 1000);
     laatstGehoord = Date.now();
     clearInterval(hartslag);
     hartslag = setInterval(() => {
@@ -140,6 +149,9 @@ function ontvang(b) {
       zetStatus(tekst('Jullie hebben een andere versie van het spel. Ververs allebei de pagina.', 'You have different versions of the game. Both refresh the page.'));
       return;
     }
+    if (!b.heb) zend({ t: 'hallo', versie, heb: true });   // de ander mist de onze nog
+    if (halloOntvangen) return;
+    halloOntvangen = true; clearInterval(halloTimer);
     sluitScherm();
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     startMatchFlow('online');

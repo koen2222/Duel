@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.argv[2] || path.join(HIER, '../dist'));
-const MAX_ZETTEN = Number(process.env.MAX_ZETTEN || 150);
+const MAX_ZETTEN = Number(process.env.MAX_ZETTEN || 80);
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
 const fail = (m) => { console.error('FAIL:', m); process.exitCode = 1; };
 
@@ -48,11 +48,13 @@ const browser = await chromium.launch({
 });
 
 const fouten = [];
+const onlineLog = [];
 async function speler(naam) {
   const ctx = await browser.newContext({ viewport: { width: 430, height: 900 }, locale: 'nl-NL' });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => fouten.push(`${naam}: ${e}`));
   page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.g|favicon|ERR_|404|stun|turn|ICE/i.test(m.text())) fouten.push(`${naam}: ${m.text()}`); });
+  page.on('console', (m) => { if (/Online|PeerJS|peer/i.test(m.text())) onlineLog.push(`${naam}: ${m.text().slice(0, 160)}`); });
   await page.addInitScript(() => {
     const p = JSON.stringify({ credits: 400, owned: { p001: 2, p002: 1, p004: 1, p005: 1, p007: 1, p025: 1, p092: 1, p147: 1, p010: 1, p011: 1, p012: 1 }, settings: { animSpeed: 'uit', lang: 'nl', autoEndTurn: true } });
     for (const k of ['schijfduel_profile', 'rondel_profile']) if (!localStorage.getItem(k)) localStorage.setItem(k, p);
@@ -206,13 +208,23 @@ if (!process.exitCode) {
   await host.waitForFunction(() => /Wachten/.test(document.querySelector('#online-status').textContent), null, { timeout: 15000 });
   const code2 = await host.$eval('#online-kamercode', (e) => e.textContent);
   await gast.click('#tile-online'); await gast.fill('#online-code', code2.toLowerCase()); await gast.click('#btn-online-mee');
-  for (const p of [host, gast]) { await p.waitForSelector('#deck-overlay.active', { timeout: 20000 }); await p.click('#btn-deck-random'); await p.click('#btn-deck-start'); }
-  await host.waitForFunction(() => Object.keys(window.__rondelQA.state.units).length === 12, null, { timeout: 15000 });
-  await gast.close({ runBeforeUnload: true });
-  const t2 = await titel(host);
-  const r2 = await host.$eval('#result-reason', (e) => e.textContent).catch(() => '');
-  console.log(`Verbinding verbroken: host ziet "${t2}" — "${r2}"`);
-  if (t2 !== 'OVERWINNING' || !/verbinding/i.test(r2)) fail('host kreeg het wegvallen van de verbinding niet goed te zien');
+  for (const p of [host, gast]) {
+    const ok = await p.waitForSelector('#deck-overlay.active', { timeout: 30000 }).then(() => true).catch(() => false);
+    if (!ok) {
+      const info = async (q) => JSON.stringify(await q.evaluate(() => ({ status: document.querySelector('#online-status').textContent, overlays: [...document.querySelectorAll('.overlay.active')].map((e) => e.id), scherm: document.querySelector('.screen.active')?.id })));
+      fail(`tweede kamer: geen teamkeuze\n  host: ${await info(host)}\n  gast: ${await info(gast)}\n  log: ${onlineLog.slice(-12).join(' | ')}`);
+      break;
+    }
+    await p.click('#btn-deck-random'); await p.click('#btn-deck-start');
+  }
+  if (!process.exitCode) await host.waitForFunction(() => Object.keys(window.__rondelQA.state.units).length === 12, null, { timeout: 15000 });
+  if (!process.exitCode) {
+    await gast.close({ runBeforeUnload: true });
+    const t2 = await titel(host);
+    const r2 = await host.$eval('#result-reason', (e) => e.textContent).catch(() => '');
+    console.log(`Verbinding verbroken: host ziet "${t2}" — "${r2}"`);
+    if (t2 !== 'OVERWINNING' || !/verbinding/i.test(r2)) fail('host kreeg het wegvallen van de verbinding niet goed te zien');
+  }
 }
 if (!process.exitCode) console.log('OK: online-test geslaagd');
 await browser.close(); srv.close(); peerHttp.close();

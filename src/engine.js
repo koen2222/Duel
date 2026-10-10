@@ -721,7 +721,7 @@ const I18N = {
     'logo.kicker':'DISK', 'home.sub':'Spin the disc. Claim the goal.',
     'home.cta':'DUEL', 'home.ctaSub':'Solo versus the AI',
     'nav.collection':'Collection', 'nav.store':'Shop', 'nav.hotseat':'Hotseat',
-    'nav.help':'How to play', 'nav.settings':'Settings', 'nav.online':'Online',
+    'nav.help':'Help', 'nav.settings':'Settings', 'nav.online':'Online',
     'chip.collection':'Collection', 'chip.w':'W', 'chip.l':'L',
     'back':'‹ Back', 'title.collection':'COLLECTION', 'title.store':'SHOP',
     'title.settings':'SETTINGS', 'title.help':'HOW TO PLAY',
