@@ -8,6 +8,8 @@ Schijfduel is de opvolger van [Rondel](https://github.com/koen2222/Rondel): een 
 
 Speel online: https://koen2222.github.io/Duel/
 
+Tegen een vriend: tik op **Online** → **Kamer maken** en geef de code van 4 tekens door. Je vriend tikt **Online**, vult de code in en kiest **Meedoen**.
+
 ## Kernmechaniek
 
 - 28-punts stadium

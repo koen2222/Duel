@@ -5,9 +5,12 @@
 import './styles.css';
 import dex from './dex.json';
 import engine from './engine.js?raw';
+import { initOnline } from './online.js';
 
 window.RONDEL_DEX = dex;
 const script = document.createElement('script');
 script.id = 'rondel-engine-script';
 script.text = engine;
 document.body.appendChild(script);
+// Online spelen (kamercode); de versie-hash zorgt dat beide spelers dezelfde engine draaien.
+initOnline(engine + JSON.stringify(dex));

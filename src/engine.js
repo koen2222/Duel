@@ -675,7 +675,7 @@ const I18N = {
     'logo.kicker':'SCHIJF', 'home.sub':'Draai de schijf. Verover het doel.',
     'home.cta':'DUEL', 'home.ctaSub':'Solo tegen het systeem',
     'nav.collection':'Collectie', 'nav.store':'Winkel', 'nav.hotseat':'Hotseat',
-    'nav.help':'Uitleg', 'nav.settings':'Instellingen',
+    'nav.help':'Uitleg', 'nav.settings':'Instellingen', 'nav.online':'Online',
     'chip.collection':'Collectie', 'chip.w':'W', 'chip.l':'V',
     'back':'‹ Terug', 'title.collection':'COLLECTIE', 'title.store':'WINKEL',
     'title.settings':'INSTELLINGEN', 'title.help':'HOE SPEEL JE',
@@ -721,7 +721,7 @@ const I18N = {
     'logo.kicker':'DISK', 'home.sub':'Spin the disc. Claim the goal.',
     'home.cta':'DUEL', 'home.ctaSub':'Solo versus the AI',
     'nav.collection':'Collection', 'nav.store':'Shop', 'nav.hotseat':'Hotseat',
-    'nav.help':'How to play', 'nav.settings':'Settings',
+    'nav.help':'Help', 'nav.settings':'Settings', 'nav.online':'Online',
     'chip.collection':'Collection', 'chip.w':'W', 'chip.l':'L',
     'back':'‹ Back', 'title.collection':'COLLECTION', 'title.store':'SHOP',
     'title.settings':'SETTINGS', 'title.help':'HOW TO PLAY',
@@ -1206,8 +1206,125 @@ function unitSilhouette(defKey, owner) {
 let state;
 let currentMode = 'solo';
 
+// ==========================================
+// ONLINE (#10) — twee spelers, elk met deze engine in de eigen browser.
+// Iedereen ziet zichzelf als p1 (onderaan) en de tegenstander als p2. Over de
+// lijn gaan alleen de zetten — gespiegeld, want het bord is 180° symmetrisch —
+// plus één startgetal waaruit beide kanten dezelfde schijfuitkomsten trekken.
+// Zo spelen beide engines precies hetzelfde potje. Het verbinden zelf
+// (kamercode, PeerJS) zit in src/online.js (window.SchijfduelNet).
+// ==========================================
+const Online = {
+  eigenTeam: null,     // ons team zoals naar de tegenstander gestuurd
+  tegen: null,         // team van de tegenstander: { units, plates, evos, levels }
+  ikBegin: true,
+  rng: null,           // gedeelde toevalsbron voor spin()
+  wachtrij: [],        // zetten van de tegenstander die nog moeten worden afgespeeld
+  evoAntwoorden: [],   // evolutiekeuzes van de tegenstander die al binnen zijn
+  evoWachter: null,    // vraagEvolutie() voor een figuur van de tegenstander wacht hierop
+  afspelen: false,     // true terwijl we een zet van de tegenstander uitvoeren
+  pompTimer: null,
+};
+function isOnline() { return !!state && state.mode === 'online'; }
+// Solo en online bekijk je allebei vanuit p1; hotseat vanuit wie er aan zet is.
+function kijkVanuitP1() { return !!state && (state.mode === 'solo' || state.mode === 'online'); }
+// Mag de speler achter dit scherm nu iets doen? Online alleen in de eigen beurt.
+function magHandelen() { return !isOnline() || Online.afspelen || state.turn === 'p1'; }
+
+// Mulberry32: klein, snel en op elke browser gelijk.
+function maakRng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Spiegelen tussen de twee kanten: punt (kolom, rij) ↔ (6 − kolom, 4 − rij);
+// figuur u1–u6 (het eigen team, eerst aangemaakt) ↔ u7–u12.
+const SPIEGEL = {};
+for (const [k, n] of Object.entries(NODES)) {
+  const m = Object.entries(NODES).find(([, o]) => o.x === 2 * BOARD_CX - n.x && o.y === BOARD_ROW_Y[0] + BOARD_ROW_Y[4] - n.y);
+  SPIEGEL[k] = m ? m[0] : k;
+}
+function spiegelUid(uid) { if (!uid) return uid; const n = +uid.slice(1); return 'u' + (n <= 6 ? n + 6 : n - 6); }
+function spiegel(b) {
+  const out = { ...b };
+  for (const k of ['uid', 'eerste']) if (out[k]) out[k] = spiegelUid(out[k]);
+  if (out.punt) out.punt = SPIEGEL[out.punt];
+  return out;
+}
+
+function onlineZend(bericht) { if (isOnline() && window.SchijfduelNet) window.SchijfduelNet.zend(spiegel(bericht)); }
+// Een eigen zet doorgeven — niet als we juist een zet van de tegenstander afspelen.
+function meldZet(bericht) { if (isOnline() && !Online.afspelen && state.turn === 'p1') onlineZend(bericht); }
+
+// src/online.js: beide teams zijn bekend, het potje kan beginnen.
+function onlineStart({ seed, ikBegin, tegen }) {
+  const geldig = tegen && Array.isArray(tegen.units) && tegen.units.length === 6 && tegen.units.every(k => UNIT_DEFS[k])
+    && Array.isArray(tegen.plates) && tegen.plates.every(k => PLATES[k]);
+  if (!geldig) { toast(tr('Het team van de tegenstander klopt niet', 'The opponent’s team is invalid')); goHome(); return; }
+  Object.assign(Online, { tegen, ikBegin, rng: maakRng(seed), wachtrij: [], evoAntwoorden: [], evoWachter: null, afspelen: false });
+  currentMode = 'online';
+  startGame();
+}
+
+// src/online.js: er komt een bericht van de tegenstander binnen.
+function onlineOntvang(b) {
+  if (!isOnline() || state.over) return;
+  if (b.t === 'evo') {
+    if (Online.evoWachter) { const w = Online.evoWachter; Online.evoWachter = null; w(!!b.ja); }
+    else Online.evoAntwoorden.push(!!b.ja);
+    return;
+  }
+  if (b.t === 'opgeven') { endMatch('p1', 'opgeven'); return; }
+  Online.wachtrij.push(b);
+  onlinePomp();
+}
+
+// Speelt de zetten van de tegenstander één voor één af, telkens pas als het
+// bord stilstaat (geen gevecht, animatie of pauze meer bij ons).
+function onlinePomp() {
+  clearTimeout(Online.pompTimer);
+  if (!isOnline() || state.over || !Online.wachtrij.length) return;
+  const bezig = state.locked || state.animating || document.querySelector('#vs-overlay.active, #combat-overlay.active, #evo-overlay.active');
+  if (bezig || state.turn !== 'p2') { Online.pompTimer = setTimeout(onlinePomp, 120); return; }
+  const b = Online.wachtrij.shift();
+  Online.afspelen = true;
+  try { speelZetAf(b); } finally { Online.afspelen = false; }
+  if (Online.wachtrij.length) Online.pompTimer = setTimeout(onlinePomp, 120);
+}
+
+function speelZetAf(b) {
+  const nietGelijk = () => { console.error('Online: zet past niet bij ons bord', b); toast(tr('Online loopt niet meer gelijk — begin een nieuw potje', 'Online is out of sync — start a new match')); };
+  if (b.t === 'einde') { endTurn(); return; }
+  if (b.t === 'kaart') {
+    const key = state.plates.p2[b.idx];
+    if (!key) { nietGelijk(); return; }
+    state.pendingPlate = b.eerste ? { idx: b.idx, key, stage: 2, uid: b.eerste } : null;
+    usePlate('p2', b.idx, b.uid || undefined, b.punt || undefined);
+    return;
+  }
+  const u = state.units[b.uid];
+  if (!u || u.owner !== 'p2') { nietGelijk(); return; }
+  if (b.t === 'inzet') { state.selected = null; state.pendingDeploy = u.uid; state.legalTargets = deployTargets(u); }
+  else if (b.t === 'zet') { state.pendingDeploy = null; state.selected = u.uid; state.legalTargets = legalMoves(u); }
+  else return;
+  if (!state.legalTargets.has(b.punt)) { state.selected = null; state.pendingDeploy = null; state.legalTargets = new Set(); nietGelijk(); return; }
+  onNodeTap(b.punt);
+}
+
+// src/online.js: de verbinding is weg.
+function onlineVerbroken() {
+  if (isOnline() && !state.over) endMatch('p1', 'verbinding');
+}
+
 function initialState() {
-  const ms = S('clockMinutes') * 60000;   // 0 = klok uit
+  // 0 = klok uit. Online nog zonder klok: elke browser zou zijn eigen tijd bijhouden.
+  const ms = currentMode === 'online' ? 0 : S('clockMinutes') * 60000;
   return { turn:'p1', turnN:0, actionsLeft:1, units:{}, bench:{p1:[],p2:[]}, hc:{p1:[],p2:[]}, selected:null, legalTargets:new Set(), pendingDeploy:null, over:false, mode: currentMode, aiThinking: false, locked: false, plates:{p1:[],p2:[]}, usedPlates:{p1:[],p2:[]}, counterAttack:{p1:false,p2:false}, plateUsed:false, pendingPlate:null, mpBonus:{}, warcry:{p1:false,p2:false}, firstMoveDone:false, animating:null, pendingFX:[], craters:[], portals:[], clock: ms ? { p1:ms, p2:ms } : null };
 }
 
@@ -1331,6 +1448,10 @@ function renderHome() {
 }
 
 function goHome() {
+  if (isOnline()) {
+    if (!state.over) onlineZend({ t: 'opgeven' });
+    if (window.SchijfduelNet) window.SchijfduelNet.sluit();
+  }
   stopClock(); clearSpinTicks();
   document.getElementById('deck-overlay').classList.remove('active');
   document.getElementById('result-overlay').classList.remove('active');
@@ -1366,6 +1487,7 @@ function vulTeamAlsErNietsTeKiezenValt() {
 // Vanuit home: modus kiezen -> deck-selectie openen
 function startMatchFlow(mode) {
   currentMode = mode;
+  Online.eigenTeam = null;
   deckSel = { units: [], plates: [], evos: {} };
   deckStage = 'p1'; deckP1 = null;
   state = initialState(); state.over = true;
@@ -1379,6 +1501,17 @@ function newGame() { goHome(); }
 
 function onDeckConfirm() {
   if (!(deckSel.units.length === 6 && deckSel.plates.length > 0)) return;
+  if (currentMode === 'online') {
+    // Online: het team gaat naar de tegenstander; het potje start pas als die
+    // ook klaar is (src/online.js roept dan onlineStart() aan).
+    if (Online.eigenTeam) return;
+    const levels = {};
+    for (const k of [...deckSel.units, ...Object.values(deckSel.evos)]) levels[k] = profile.owned[k] || 1;
+    Online.eigenTeam = { units: [...deckSel.units], plates: [...deckSel.plates], evos: { ...deckSel.evos }, levels };
+    if (window.SchijfduelNet) window.SchijfduelNet.teamGekozen(Online.eigenTeam);
+    renderDeckSelect();
+    return;
+  }
   if (currentMode === 'hotseat' && deckStage === 'p1') {
     deckP1 = { units: [...deckSel.units], plates: [...deckSel.plates], evos: { ...deckSel.evos } };
     deckSel = { units: [], plates: [], evos: {} };
@@ -1541,7 +1674,8 @@ function renderDeckSelect() {
   }
   document.getElementById('deck-count-units').textContent = `${t('deck.units')}: ${deckSel.units.length} / 6 (${t('chip.collection').toLowerCase()}: ${Object.keys(profile.owned).length}/${DEX_COUNT})`;
   document.getElementById('deck-count-plates').textContent = `${t('deck.plates')}: ${plateCost(deckSel.plates)} / ${PLATE_BUDGET} (${deckSel.plates.length})`;
-  document.getElementById('btn-deck-start').disabled = !(deckSel.units.length === 6 && deckSel.plates.length > 0);
+  document.getElementById('btn-deck-start').disabled = !(deckSel.units.length === 6 && deckSel.plates.length > 0) || !!Online.eigenTeam;
+  if (Online.eigenTeam) document.getElementById('btn-deck-start').textContent = tr('Wachten op tegenstander…', 'Waiting for opponent…');
   renderDeckLineup();
 }
 
@@ -1660,13 +1794,19 @@ function startGame() {
     if (lvl && lvl > 1) { for (let i = 1; i < lvl; i++) levelSlotBoost(u); u.level = lvl; }
     state.units[uid] = u; state.bench[owner].push(uid);
   };
-  const p1Deck = deckP1 || deckSel;   // hotseat: deckP1 geparkeerd, deckSel = P2-keuze
+  const p1Deck = (currentMode === 'online' && Online.eigenTeam) || deckP1 || deckSel;   // hotseat: deckP1 geparkeerd, deckSel = P2-keuze
   const p1Evos = p1Deck.evos || {};
   for (const k of p1Deck.units) mk(k, 'p1', profile.owned[k] || 1, p1Evos);
   if (currentMode === 'hotseat' && deckP1) {
     const p2Evos = deckSel.evos || {};
     for (const k of deckSel.units) mk(k, 'p2', profile.owned[k] || 1, p2Evos);
     state.plates.p2 = [...deckSel.plates];
+  } else if (currentMode === 'online') {
+    // Het team (en de levels uit de collectie) van de tegenstander
+    const tg = Online.tegen;
+    for (const k of tg.units) mk(k, 'p2', (tg.levels && tg.levels[k]) || 1, tg.evos || {});
+    state.plates.p2 = [...tg.plates];
+    if (!Online.ikBegin) state.turn = 'p2';
   } else {
     const foe = aiDeck();
     const foeEvos = foe.evos || {};
@@ -1684,7 +1824,7 @@ function playVsIntro() {
   const n1 = document.getElementById('vs-p1-name');
   const n2 = document.getElementById('vs-p2-name');
   if (n1) n1.textContent = t('hud.you');
-  if (n2) n2.textContent = state.mode === 'solo' ? 'AI' : t('hud.p2');
+  if (n2) n2.textContent = state.mode === 'solo' ? 'AI' : isOnline() ? t('combat.foe') : t('hud.p2');
   const figs = (owner) => Object.values(state.units)
     .filter(u => u.owner === owner)
     .map(u => unitVisual(u.defKey, owner, 78)).join('');
@@ -1714,7 +1854,7 @@ function showTurnSplash() {
   const box = document.getElementById('turn-splash');
   const txt = document.getElementById('turn-splash-txt');
   if (!box || !txt || animOff()) return;
-  txt.textContent = state.turn === 'p1' ? t('splash.yours') : (state.mode === 'solo' ? t('splash.foe') : t('splash.p2'));
+  txt.textContent = state.turn === 'p1' ? t('splash.yours') : (kijkVanuitP1() ? t('splash.foe') : t('splash.p2'));
   box.className = 'turn-splash show ' + state.turn;
   box.setAttribute('aria-hidden', 'false');
   setTimeout(() => { box.classList.remove('show'); box.setAttribute('aria-hidden', 'true'); }, 1200);
@@ -1725,8 +1865,10 @@ function showTurnSplash() {
 // als de AI JOUW doel innam). Nu geven de aanroepplekken alleen een CODE en
 // formuleert deze functie het vanuit de speler die kijkt.
 function endReasonText(winner, kind) {
-  const solo = state.mode === 'solo';
+  const solo = kijkVanuitP1();
   const jij = winner === 'p1';
+  if (kind === 'opgeven') return jij ? tr('De tegenstander gaf op', 'The opponent forfeited') : tr('Je gaf op', 'You forfeited');
+  if (kind === 'verbinding') return tr('De verbinding met je tegenstander is verbroken', 'The connection to your opponent was lost');
   if (kind === 'goal') {
     if (!solo) return tr(`Speler ${jij ? 1 : 2} bereikte het doel van de tegenstander`, `Player ${jij ? 1 : 2} reached the opponent’s goal`);
     return jij ? tr('Je figuur bereikte hun doel!', 'Your figure reached their goal!') : tr('De tegenstander bereikte jouw doel', 'The opponent reached your goal');
@@ -1760,8 +1902,8 @@ function endMatch(winner, kind) {
     const doel = Object.values(NODES).find(n => n.type === 'goal' && n.owner !== winner);
     if (doel) queueFX(doel.x, doel.y, 'goal:' + winner);
   }
-  document.getElementById('result-title').textContent = state.mode === 'solo' ? (won ? t('result.win') : t('result.lose')) : (won ? t('result.p1win') : t('result.p2win'));
-  document.getElementById('result-title').className = 'result-title ' + (state.mode !== 'solo' || won ? 'win' : 'lose');
+  document.getElementById('result-title').textContent = kijkVanuitP1() ? (won ? t('result.win') : t('result.lose')) : (won ? t('result.p1win') : t('result.p2win'));
+  document.getElementById('result-title').className = 'result-title ' + (!kijkVanuitP1() || won ? 'win' : 'lose');
   document.getElementById('result-reason').textContent = msg;
   document.getElementById('result-reward').textContent = state.mode === 'solo' ? `+${gain} credits` : '';
   const roster = document.getElementById('result-roster');
@@ -1779,8 +1921,8 @@ function endMatch(winner, kind) {
   // overheen te ploffen.
   setTimeout(() => {
     if (!document.getElementById('screen-game').classList.contains('active')) return;
-    sfx(state.mode !== 'solo' || won ? 'win' : 'lose');
-    Audio_.playSting(state.mode !== 'solo' || won ? 'win' : 'lose');
+    sfx(!kijkVanuitP1() || won ? 'win' : 'lose');
+    Audio_.playSting(!kijkVanuitP1() || won ? 'win' : 'lose');
     Audio_.stopLoop();
     document.getElementById('result-overlay').classList.add('active');
   }, kind === 'goal' && !animOff() ? 1700 : 900);
@@ -2976,7 +3118,7 @@ function speelTreffer(bron, doel, soort, geblokt) {
 // ze in de bord-SVG zelf, licht gewaaierd, met het icoon en de naam erop.
 function renderPlateCards() {
   const svg = document.getElementById('board');
-  const player = (state.mode === 'solo') ? 'p1' : state.turn;
+  const player = kijkVanuitP1() ? 'p1' : state.turn;
   const foe = player === 'p1' ? 'p2' : 'p1';
   renderFoeCards(svg, (state.plates[foe] || []).length);
   const plates = state.plates[player] || [];
@@ -3093,21 +3235,21 @@ function renderTurnBanner() {
   const p1n = document.getElementById('hud-p1-name');
   const p2n = document.getElementById('hud-p2-name');
   if (p1n) p1n.textContent = t('hud.you');
-  if (p2n) p2n.textContent = solo ? 'AI' : t('hud.p2');
-  let name = state.turn === 'p1' ? t('hud.yourTurn') : (solo ? t('hud.ai') : t('hud.p2'));
+  if (p2n) p2n.textContent = solo ? 'AI' : isOnline() ? t('hud.red') : t('hud.p2');   // 'Tegenstander' past hier niet
+  let name = state.turn === 'p1' ? t('hud.yourTurn') : (solo ? t('hud.ai') : isOnline() ? t('combat.foe') : t('hud.p2'));
   if (state.aiThinking) name = t('hud.aiCalc');
   document.getElementById('turn-name').textContent = name;
   document.getElementById('turn-actions').textContent = `${state.actionsLeft} ${isEn() ? (state.actionsLeft===1?'ACTION':'ACTIONS') : ('ACTIE' + (state.actionsLeft===1?'':'S'))}`;
   const endBtn = document.getElementById('btn-end-turn');
   const bar = document.querySelector('.action-bar');
   if (bar) bar.classList.toggle('auto-end', !!S('autoEndTurn'));
-  if (endBtn) endBtn.style.display = S('autoEndTurn') ? 'none' : '';
+  if (endBtn) endBtn.style.display = S('autoEndTurn') || !magHandelen() ? 'none' : '';
   paintClocks();
 }
 
 function renderPlates() {
   const div = document.getElementById('plate-strip'); div.innerHTML = '';
-  const player = (state.mode === 'solo') ? 'p1' : state.turn;
+  const player = kijkVanuitP1() ? 'p1' : state.turn;
   const plates = state.plates[player] || [];
   // De strip blijft ALTIJD even hoog, ook zonder kaarten. Anders klapt hij bij
   // elke beurtwissel open en dicht en herschaalt het hele bord mee — dat was
@@ -3139,7 +3281,7 @@ function longThrowTargets(player) {
 }
 
 function onPlateTap(idx) {
-  if (state.over || state.locked) return;
+  if (state.over || state.locked || !magHandelen()) return;
   const player = state.turn;
   if (state.plateUsed) { toast(tr('Al een plate gebruikt deze beurt', 'Already used a plate this turn')); return; }
   if (state.pendingPlate && state.pendingPlate.idx === idx) { state.pendingPlate = null; state.legalTargets = new Set(); renderAll(); return; }
@@ -3194,7 +3336,7 @@ function onPlateTap(idx) {
 // Waar ligt de kaart nu? Bij jezelf is dat de waaier rechtsonder, bij de
 // tegenstander het stapeltje met de rug omhoog linksboven.
 function kaartBronRect(player, idx) {
-  const kijker = (state.mode === 'solo') ? 'p1' : state.turn;
+  const kijker = kijkVanuitP1() ? 'p1' : state.turn;
   if (player === kijker) {
     const lijst = document.querySelectorAll('#board g.plate-card');
     const e = lijst[idx] || lijst[lijst.length - 1];
@@ -3259,6 +3401,7 @@ function speelKaartFx(key, van, naar) {
 }
 
 function usePlate(player, idx, targetUid, targetNode) {
+  meldZet({ t: 'kaart', idx, uid: targetUid || null, punt: targetNode || null, eerste: (state.pendingPlate && state.pendingPlate.uid) || null });
   const key = state.plates[player][idx]; const pl = PLATES[key];
   const u = targetUid ? state.units[targetUid] : null;
   // Meten vóór we het bord opnieuw tekenen — daarna is de kaart weg
@@ -3749,7 +3892,7 @@ function bindUnitGestures(g, uid, onTap) {
 }
 
 function onBenchTap(uid) {
-  if (state.over || state.locked) return; const u = state.units[uid];
+  if (state.over || state.locked || !magHandelen()) return; const u = state.units[uid];
   if (state.pendingPlate && state.pendingPlate.stage === 1 && state.pendingPlate.key === 'longthrow') {
     if (u.owner !== state.turn) { sfx('denied'); return; }
     if (u.status.includes('wait')) { sfx('denied'); toast(tr('Die heeft nog Wacht', 'That one still has Wait')); return; }
@@ -3781,11 +3924,12 @@ function onBenchTap(uid) {
 }
 
 function onNodeTap(nodeKey) {
-  if (state.over || state.locked || !state.legalTargets.has(nodeKey)) return;
+  if (state.over || state.locked || !state.legalTargets.has(nodeKey) || !magHandelen()) return;
   if (state.pendingPlate && state.pendingPlate.stage === 2) { usePlate(state.turn, state.pendingPlate.idx, state.pendingPlate.uid, nodeKey); return; }
   if (state.pendingPlate) return;
   if (state.pendingDeploy) {
     state.locked = true; const uid = state.pendingDeploy; const u = state.units[uid];
+    meldZet({ t: 'inzet', uid, punt: nodeKey });
     state.pendingDeploy = null; state.legalTargets = new Set();
     doDeploy(u, nodeKey).then(() => { state.actionsLeft--; state.locked = false; afterAction(); });
     return;
@@ -3793,15 +3937,14 @@ function onNodeTap(nodeKey) {
   if (state.selected) {
     state.locked = true; 
     const u = state.units[state.selected];
+    meldZet({ t: 'zet', uid: u.uid, punt: nodeKey });
     const targetUnit = unitAt(nodeKey);
 
     if (targetUnit && targetUnit.owner !== u.owner) {
-      const path = bfs(u.node, nodeKey);
-      if (path && path.length > 1) {
-        const standNode = path[path.length - 2];
-        if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, targetUnit); }); } 
-        else { state.actionsLeft--; runCombat(u, targetUnit); }
-      }
+      const standNode = standplaatsVoor(u, nodeKey);
+      if (!standNode) { state.locked = false; return; }
+      if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, targetUnit); }); }
+      else { state.actionsLeft--; runCombat(u, targetUnit); }
       return;
     }
 
@@ -3868,6 +4011,7 @@ function bfs(start, end, phase) {
 
 function onUnitTap(uid) {
   if (state.over || state.locked) return; const u = state.units[uid];
+  if (!magHandelen()) { if (u.node) showUnitInfo(uid); return; }   // online: de tegenstander is aan zet
   if (state.pendingPlate && state.pendingPlate.stage === 1) {
     if (u.node && state.legalTargets.has(u.node)) {
       const pp = state.pendingPlate;
@@ -3955,7 +4099,7 @@ function showUnitInfo(uid) {
   const def = UNIT_DEFS[u.defKey];
   document.getElementById('info-art').innerHTML = unitVisual(u.defKey, u.owner, 64);
   document.getElementById('info-name').textContent = unitName(u.defKey);
-  const side = u.owner === 'p1' ? t('combat.you') : (state.mode === 'solo' ? t('combat.foe') : t('hud.p2'));
+  const side = u.owner === 'p1' ? t('combat.you') : (kijkVanuitP1() ? t('combat.foe') : t('hud.p2'));
   const mp = u.node ? effMP(u) : def.mp;
   const st = u.status.map(statusLabel);
   document.getElementById('info-sub').textContent =
@@ -4095,7 +4239,9 @@ function legalMoves(u) {
     for (const nx of ADJ[n]) {
       const occ = unitAt(nx);
       if (occ && occ.owner !== u.owner) {
-        if (!frozen) out.add(nx);                             // aanvallen op de vijand
+        // aanvallen op de vijand — alleen vanaf een punt waar je kunt staan; wie
+        // over een figuur heen vliegt/sluipt, kan niet vanaf diens plek vechten
+        if (!frozen && (n === u.node || !unitAt(n))) out.add(nx);
         if (phase && (!seen.has(nx) || seen.get(nx) > d+1)) { seen.set(nx, d+1); q.push([nx, d+1]); } // eroverheen
         continue;
       }
@@ -4108,6 +4254,25 @@ function legalMoves(u) {
     }
   }
   return out;
+}
+
+// Het dichtstbijzijnde punt (binnen MP, met dezelfde loopregels als
+// legalMoves) naast `doel` waar u kan staan om aan te vallen; null als dat niet kan.
+function standplaatsVoor(u, doel) {
+  const phase = canPhase(u), mp = effMP(u);
+  const seen = new Set([u.node]), q = [[u.node, 0]];
+  while (q.length) {
+    const [n, d] = q.shift();
+    if (ADJ[n].has(doel) && (n === u.node || !unitAt(n))) return n;
+    if (d >= mp - 1) continue;
+    for (const nx of ADJ[n]) {
+      if (seen.has(nx)) continue;
+      const occ = unitAt(nx);
+      if (occ && !phase) continue;
+      seen.add(nx); q.push([nx, d + 1]);
+    }
+  }
+  return null;
 }
 
 function unitAt(k) { return Object.values(state.units).find(u => u.node === k); }
@@ -4170,7 +4335,7 @@ function afterAction() {
 function maybeAutoEndTurn() {
   if (!S('autoEndTurn')) return;
   if (state.over || state.actionsLeft > 0 || state.pendingPlate) return;
-  if (state.mode === 'solo' && state.turn !== 'p1') return;   // AI regelt z'n eigen beurt al
+  if ((state.mode === 'solo' || isOnline()) && state.turn !== 'p1') return;   // AI / tegenstander regelt z'n eigen beurt
   setTimeout(() => {
     if (state.over || state.locked || state.actionsLeft > 0 || state.pendingPlate) return;
     endTurn();
@@ -4190,6 +4355,10 @@ function hasAnyAction(player) {
 
 function endTurn() {
   if (state.over || state.locked) return;
+  if (isOnline() && !Online.afspelen) {
+    if (state.turn !== 'p1') return;   // de beurt van de tegenstander eindigt alleen via diens bericht
+    onlineZend({ t: 'einde' });
+  }
   // Sleep geneest via een aangrenzende bondgenoot; frozen geneest sinds sessie 22 ná een gevecht (Duel-regel)
   for (const u of Object.values(state.units)) { if (!u.node) continue; if (u.status.includes('sleep')) { const hasAdj = [...ADJ[u.node]].some(n => { const o = unitAt(n); return o && o.owner === u.owner; }); if (hasAdj) u.status = u.status.filter(s => s!=='sleep'); } }
   // Wacht gaat eraf ná de beurt die het figuur moest overslaan (niet meteen bij toekennen).
@@ -4236,7 +4405,7 @@ function endTurn() {
   // Waarschuwing zodra je aanvoer is afgesneden: dan kun je niets meer inzetten
   // en moet je elke beurt met wat er staat blijven schuiven. In Duel is dit een
   // erkende situatie (er bestaan kaarten die er speciaal tegen zijn).
-  if ((state.mode !== 'solo' || state.turn === 'p1') && entriesBlockedBy(state.turn)) {
+  if ((!kijkVanuitP1() || state.turn === 'p1') && entriesBlockedBy(state.turn)) {
     const own = Object.values(state.units).filter(u => u.owner === state.turn && u.node).length;
     toast(own <= 1
       ? tr('Al je startpunten zijn bezet én je hebt nog één figuur — je moet wel bewegen!', 'All your entries are occupied and you have one figure left — you have to move!')
@@ -4409,7 +4578,7 @@ function markeerSlot(svgId, idx) {
 function spin(svgId, ms) {
   return new Promise(res => {
     const svg = document.getElementById(svgId);
-    const idx = Math.floor(Math.random()*SLOT_COUNT);
+    const idx = Math.floor((isOnline() && Online.rng ? Online.rng() : Math.random()) * SLOT_COUNT);
     // Animatie-instelling: 'uit' toont het resultaat meteen, 'snel' halveert.
     if (animOff()) {
       svg.style.transition = 'none';
@@ -4879,7 +5048,8 @@ function doeEvolutie(u) {
   // dat je van die evolutie in je collectie hebt; de AI heeft geen collectie,
   // dus die houdt het level van z'n eigen deck aan.
   const uitCollectie = !(state.mode === 'solo' && u.owner === 'p2');
-  const lvl = uitCollectie ? ((profile && profile.owned && profile.owned[naar]) || 1) : (u.level || 1);
+  const lvl = isOnline() && u.owner === 'p2' ? ((Online.tegen.levels && Online.tegen.levels[naar]) || 1)
+    : uitCollectie ? ((profile && profile.owned && profile.owned[naar]) || 1) : (u.level || 1);
   const tmp = { slots: JSON.parse(JSON.stringify(UNIT_DEFS[naar].slots)) };
   for (let i = 1; i < lvl; i++) levelSlotBoost(tmp);
   u.defKey = naar;
@@ -4904,6 +5074,14 @@ function vraagEvolutie(u) {
     // De AI evolueert altijd: een grotere schijf mét bonus is nooit slechter
     // dan dezelfde schijf zonder.
     if (state.mode === 'solo' && u.owner === 'p2') { doeEvolutie(u); res(true); return; }
+    // Online kiest de tegenstander zelf; zijn antwoord komt als bericht binnen.
+    if (isOnline() && u.owner === 'p2') {
+      const klaarTegen = (ja) => { if (ja) doeEvolutie(u); res(ja); };
+      if (Online.evoAntwoorden.length) { klaarTegen(Online.evoAntwoorden.shift()); return; }
+      toast(tr('De tegenstander kiest of hij evolueert…', 'The opponent is choosing whether to evolve…'));
+      Online.evoWachter = klaarTegen;
+      return;
+    }
     const ov = document.getElementById('evo-overlay');
     const naar = u.evoKey;
     document.getElementById('evo-van-art').innerHTML = unitVisual(u.defKey, u.owner, 92);
@@ -4915,6 +5093,7 @@ function vraagEvolutie(u) {
     const ja = document.getElementById('btn-evo-ja'), nee = document.getElementById('btn-evo-nee');
     const klaar = (evolueren) => {
       ja.onclick = null; nee.onclick = null;
+      if (isOnline()) onlineZend({ t: 'evo', ja: evolueren });
       ov.classList.remove('active');
       if (evolueren) doeEvolutie(u);
       res(evolueren);
@@ -4926,7 +5105,7 @@ function vraagEvolutie(u) {
 
 let toastT; function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2000); }
 
-document.getElementById('btn-end-turn').addEventListener('click', endTurn);
+document.getElementById('btn-end-turn').addEventListener('click', () => { if (magHandelen()) endTurn(); });
 let pauseWasLocked = false;
 function openPause() {
   if (!state || state.over) { goHome(); return; }
@@ -4972,6 +5151,7 @@ document.addEventListener('click', (e) => {
   if (!(t instanceof Element)) return;
   if (t.closest('#tile-solo')) startMatchFlow('solo');
   else if (t.closest('#tile-hotseat')) startMatchFlow('hotseat');
+  else if (t.closest('#tile-online')) { if (window.SchijfduelNet) window.SchijfduelNet.open(); }
   else if (t.closest('#tile-collection')) { renderCollection(); showScreen('collection'); }
   else if (t.closest('#tile-store')) { renderStore(); showScreen('store'); }
   else if (t.closest('#tile-settings')) { renderSettings(); showScreen('settings'); }
@@ -5239,9 +5419,8 @@ function aiTurn() {
     if (best.type === 'deploy') { state.locked = true; doDeploy(state.units[best.uid], best.target).then(() => { state.actionsLeft--; state.locked = false; afterAction(); }); }
     else if (best.type === 'move') { state.locked = true; moveUnit(state.units[best.uid], best.target).then(()=>{ const g = NODES[best.target]; if (g.type==='goal' && g.owner !== AI) { endMatch(AI, 'goal'); return; } state.actionsLeft--; state.locked = false; afterAction(); }); }
     else if (best.type === 'attack') { 
-        state.locked = true; const u = state.units[best.uid]; const path = bfs(u.node, best.target);
-        if (path && path.length > 1) {
-            const standNode = path[path.length - 2];
+        state.locked = true; const u = state.units[best.uid]; const standNode = standplaatsVoor(u, best.target);
+        if (standNode) {
             if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, state.units[best.defenderUid]); }); }
             else { state.actionsLeft--; runCombat(u, state.units[best.defenderUid]); }
         } else { state.locked = false; setTimeout(endTurn, 300); }
@@ -5257,7 +5436,7 @@ window.__rondelBoot = function () {
   newGame();
 };
 window.__RONDEL_ENGINE_VER = 'schijfduel-bgm-1';
-window.__rondelQA = { get state() { return state; }, renderAll, showTurnSplash, openPause, get audio() { return Audio_; } };
+window.__rondelQA = { get state() { return state; }, get online() { return Online; }, renderAll, showTurnSplash, openPause, get audio() { return Audio_; } };
 // PWA: service worker alleen registreren als we via https draaien (file:// blijft gewoon werken)
 try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js'); } catch(e) {}
 
