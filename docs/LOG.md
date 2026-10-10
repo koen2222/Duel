@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — save-sleutel
+- #17: profiel staat nu onder `schijfduel_profile`; `rondel_profile` (gedeeld met Rondel op hetzelfde domein) wordt alleen éénmalig overgenomen en daarna niet meer aangeraakt. Werkt live pas via de Vite-build (#2).
+- Rooktest: het vooraf ingestelde profiel was onvolledig en werd door `loadProfile` weggegooid; nu volledig, dus animaties echt uit (potje ~50 s i.p.v. ~2 min).
+
 ## 2026-10-10 (middag) — Schijfduel-bot
 - #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
 - #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
