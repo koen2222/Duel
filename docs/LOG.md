@@ -2,6 +2,11 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — plaatjes
+- #15: plaatjes van #11–#18 en #70/#74 op de juiste figuur gezet (alleen bestanden hernoemd, dex ongewijzigd).
+- #15: snippers van buurfiguren uit 36 plaatjes gehaald met het nieuwe `tools/snippers.py`; `skeleton.png` en `p109.png` bewust overgeslagen (losse vlammetjes/belletjes horen bij de figuur).
+- Open: #16 nieuw plaatje voor #74 Kiezelkop (lijkt nu op #75), #17 save-sleutel gedeeld met Rondel (vraag aan Koen).
+
 ## 2026-10-10 (middag) — Schijfduel-bot
 - #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
 - #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
