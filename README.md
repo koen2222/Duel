@@ -4,6 +4,10 @@
 
 Schijfduel is de opvolger van [Rondel](https://github.com/koen2222/Rondel): een tactisch bordspel met draaiende schijven, geïnspireerd op Pokémon Duel (Kanto-stijl). Het spel wordt zowel fysiek als digitaal gemaakt.
 
+## Spelen
+
+Speel online: https://koen2222.github.io/Duel/
+
 ## Kernmechaniek
 
 - 28-punts stadium
@@ -20,7 +24,7 @@ Schijfduel is de opvolger van [Rondel](https://github.com/koen2222/Rondel): een 
 
 ## Structuur
 
-- `prototype/` digitaal prototype (web)
+- Root (`index.html`, `assets/`, `art/`): het speelbare webspel
+- `docs/` documentatie, zoals het palet
 - `regels/` spelregels
-- `assets/` logo, OG-kaarten, palet
 - `print/` printbestanden voor het bordspel

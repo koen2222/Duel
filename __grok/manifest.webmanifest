@@ -1,0 +1,13 @@
+{
+  "name": "Schijfduel",
+  "short_name": "Schijfduel",
+  "id": "/Duel/",
+  "start_url": "/Duel/",
+  "scope": "/Duel/",
+  "display": "standalone",
+  "background_color": "#071428",
+  "theme_color": "#071428",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
