@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — balans
+- #8: analyse in `docs/BALANS.md`, gemaakt met het nieuwe `tools/balans.mjs` (rekent met de echte regels uit de engine). Belangrijkste: 50 figuren hebben een van 4 sjabloonschijven; uitschieters Buidelstoot, Kiezelkop, Neveling; Tweede Kans en Verblinding leveren gemiddeld niets op.
+- Open vragen voor Koen: zie `docs/BALANS.md`, "Vragen aan Koen".
+
 ## 2026-10-10 (middag) — Schijfduel-bot
 - #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
 - #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
