@@ -13,6 +13,9 @@ Nieuwste bovenaan. Formaat: datum — wie — wat.
 - Open voor Koen: na het mergen Settings → Pages → Source op "GitHub Actions" zetten (zie de PR).
 - Daarna opruimen (apart issue): oude build in de root (`index.html`, `assets/`, `tools/rehash.py`), statische bestanden naar `public/`.
 
+## 2026-10-10 (middag) — Claude — vliegende aanval
+- #22: vliegende/sluipende figuren konden bij een aanval verder lopen dan hun MP (omweg via `bfs` zonder over figuren te gaan). Nieuw: `standplaatsVoor(u, doel)`; `legalMoves` biedt alleen nog aanvallen aan vanaf een punt waar je kunt staan; speler en AI gebruiken dezelfde standplaats. Werkt live via de Vite-build (#2).
+
 ## 2026-10-10 (middag) — Schijfduel-bot
 - #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
 - #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
