@@ -1,0 +1,56 @@
+# Bouwt Schijfduel met Vite, speelt de rooktest op de build en publiceert die op
+# GitHub Pages. Bij een pull request wordt alleen gebouwd en getest; publiceren
+# gebeurt pas na samenvoegen in main.
+# Vereist: Settings → Pages → Build and deployment → Source = "GitHub Actions".
+name: Bouwen en publiceren
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  bouwen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            test/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Rooktest op de build
+        working-directory: test
+        run: |
+          npm ci
+          node smoke.mjs ../dist
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  publiceren:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: bouwen
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publiceer.outputs.page_url }}
+    steps:
+      - id: publiceer
+        uses: actions/deploy-pages@v5

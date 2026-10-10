@@ -1,0 +1,14 @@
+{
+  "name": "schijfduel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "rooktest": "cd test && node smoke.mjs ../dist"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  }
+}
