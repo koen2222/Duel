@@ -18,6 +18,8 @@ Live: https://koen2222.github.io/Duel/ (GitHub Pages vanaf `main`, root).
 3. PR naar `main` met beschrijving: wat, waarom, hoe getest, `Closes #nr`.
 4. **Breek de live versie nooit**: `main` = wat spelers zien. Test lokaal vóór merge:
    `python3 -m http.server 8000` in de repo-root → open http://localhost:8000/ en speel een potje inclusief een gevecht (let op de console). Let op: de build verwacht pad `/Duel/`; lokaal kan een paar asset-paden afwijken — test dan via `mkdir -p /tmp/s && ln -s $PWD /tmp/s/Duel && cd /tmp/s && python3 -m http.server` en open `/Duel/`.
+   **Rooktest (verplicht vóór merge):** `cd test && npm install && node smoke.mjs` — speelt headless een heel solo-potje via echte klikken (serveert de repo zelf onder `/Duel/`) en faalt bij JS-fouten of als er geen gevecht was. Live testen: `BASE_URL=https://koen2222.github.io/Duel/ node smoke.mjs`. Chrome-pad via `CHROME=...`.
+   **Na elke wijziging in `assets/`:** `python3 tools/rehash.py` (nieuwe versiehash in de bestandsnamen, zodat niemand Ctrl+Shift+R nodig heeft).
 5. Werk `docs/LOG.md` bij (datum, wie, wat, open punten) en de relevante docs.
 6. Kleine commits, Nederlandse commitberichten.
 

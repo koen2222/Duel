@@ -4,18 +4,18 @@
 
 ## 1. Opbouw van de build
 
-- `index.html` — door TanStack Start (React, SSR) gegenereerde pagina met de schermen al voorgerenderd in `<div id="rondel-root">`. Laadt `assets/index-C7hcOzN5.js` (React + router-runtime, geen spellogica) en `assets/routes-Dr8XJVnO.js`.
-- `assets/routes-Dr8XJVnO.js` — de route-component `l()`. Die bevat drie grote literals:
+- `index.html` — door TanStack Start (React, SSR) gegenereerde pagina met de schermen al voorgerenderd in `<div id="rondel-root">`. Laadt `assets/index-v<hash>.js` (React + router-runtime, geen spellogica) en `assets/routes-v<hash>.js`.
+- `assets/routes-v<hash>.js` — de route-component `l()`. Die bevat drie grote literals:
   - `i`: HTML van alle schermen → nu `src/screens.html`
   - `a`: de volledige engine als tekst → nu `src/engine.js`
   - `o`: de dex (151 figuren) als JSON → nu `src/dex.json`
   In een `useLayoutEffect` zet de component `window.RONDEL_DEX = o`, vult `#rondel-root` met `i` en voegt een `<script id="rondel-engine-script">` met tekst `a` toe. Versiemarker: `schijfduel-bgm-1` (`__RONDEL_ENGINE_VER`).
 - React is dus alleen een schil; **het spel zelf is één vanilla-JS-script** dat de DOM en een SVG-bord direct aanstuurt.
-- `assets/styles-B08ocPAI.css` — alle stijlen.
+- `assets/styles-v<hash>.css` — alle stijlen.
 - `art/` — figuurplaatjes (pad per figuur in de dex, veld `art`).
-- `rondel-dex.js` (root) — losse dex (`window.RONDEL_DEX = [...]`), wordt door `index.html` **niet** geladen (?) restant/handig voor tooling.
-- `__grok/` — manifest en icoon van de Grok app builder. `index.html` laadt ook `https://grok.com/grok-app-builder/extensions.js` en OG-tags wijzen nog naar `pokemonduel2.grok.me`.
-- De engine registreert `sw.js` als service worker op https, maar **`sw.js` bestaat niet in de repo** (fout wordt stil ingeslikt).
+- `__grok/` — manifest en icoon (mapnaam uit de Grok-build; wordt ook door de index-JS gebruikt, dus laten staan).
+- `sw.js` — minimale service worker zonder cache (wist oude caches, neemt direct over).
+- Bestandsnamen in `assets/` dragen een versiehash (`-v<hash>`); na elke wijziging `python3 tools/rehash.py` draaien. De oude Grok-namen (`index-C7hcOzN5.js` enz.) blijven als kopie bestaan voor verouderde gecachete `index.html`.
 
 ### Bron terugwinnen
 `src/` is gemaakt met een klein Node-script (acorn): parse `routes-*.js`, pak de template-literals `i` en `a` en het argument van `JSON.parse` (`o`). Zie de commit van 2026-10-10.

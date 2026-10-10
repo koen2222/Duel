@@ -2,6 +2,13 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Schijfduel-bot
+- #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
+- #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
+- #6: rooktest `test/smoke.mjs` (Playwright, echte klikken, heel potje). Lokaal: 28 beurten, 24 gevechten, geen JS-fouten.
+- Engine niet aangepast; `src/` is dus nog gelijk aan de build.
+- Restpunt: GitHub Pages cachet `index.html` zelf tot ~10 min (`max-age=600`), dat valt niet uit te zetten.
+
 ## 2026-10-10 — Schijfduel-bot
 - Gebouwde versie van pokemonduel2.grok.me in de repo gezet, GitHub Pages aangezet (https://koen2222.github.io/Duel/).
 - Fix 1445765: ontbrekende `spin()` in `runCombat` (aanvallen liep vast).
