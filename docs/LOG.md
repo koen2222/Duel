@@ -2,6 +2,9 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — regels
+- #7: `docs/REGELS.md` naast de code gelegd en aangevuld (MP-maximum, eerste zet, aanvallen na lopen, wat "winnen" is, statussen, P.C., abilities). Zes vragen voor Koen onderaan `docs/REGELS.md`.
+
 ## 2026-10-10 (middag) — Claude
 - #2: Vite-setup. Bron in `src/` (nieuw: `index.html`, `main.js`, `styles.css`), `npm run build` → `dist/`, GitHub Action `pages.yml` bouwt, draait de rooktest en publiceert. `test/smoke.mjs` accepteert nu een map (`node smoke.mjs ../dist`).
 - Getest: rooktest op `dist/` en op de oude build geslaagd; collectie- en uitlegscherm pixel-identiek aan de oude build, geen 404's of consolefouten.
