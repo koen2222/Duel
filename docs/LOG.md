@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — balans
+- #8: analyse in `docs/BALANS.md`, gemaakt met het nieuwe `tools/balans.mjs` (rekent met de echte regels uit de engine). Belangrijkste: 50 figuren hebben een van 4 sjabloonschijven; uitschieters Buidelstoot, Kiezelkop, Neveling; Tweede Kans en Verblinding leveren gemiddeld niets op.
+- Open vragen voor Koen: zie `docs/BALANS.md`, "Vragen aan Koen".
+
 ## 2026-10-10 (middag) — Claude
 - #2: Vite-setup. Bron in `src/` (nieuw: `index.html`, `main.js`, `styles.css`), `npm run build` → `dist/`, GitHub Action `pages.yml` bouwt, draait de rooktest en publiceert. `test/smoke.mjs` accepteert nu een map (`node smoke.mjs ../dist`).
 - Getest: rooktest op `dist/` en op de oude build geslaagd; collectie- en uitlegscherm pixel-identiek aan de oude build, geen 404's of consolefouten.
