@@ -5,6 +5,12 @@ Nieuwste bovenaan. Formaat: datum — wie — wat.
 ## 2026-10-10 (middag) — Claude — regels
 - #7: `docs/REGELS.md` naast de code gelegd en aangevuld (MP-maximum, eerste zet, aanvallen na lopen, wat "winnen" is, statussen, P.C., abilities). Zes vragen voor Koen onderaan `docs/REGELS.md`.
 
+## 2026-10-10 (middag) — Claude
+- #2: Vite-setup. Bron in `src/` (nieuw: `index.html`, `main.js`, `styles.css`), `npm run build` → `dist/`, GitHub Action `pages.yml` bouwt, draait de rooktest en publiceert. `test/smoke.mjs` accepteert nu een map (`node smoke.mjs ../dist`).
+- Getest: rooktest op `dist/` en op de oude build geslaagd; collectie- en uitlegscherm pixel-identiek aan de oude build, geen 404's of consolefouten.
+- Open voor Koen: na het mergen Settings → Pages → Source op "GitHub Actions" zetten (zie de PR).
+- Daarna opruimen (apart issue): oude build in de root (`index.html`, `assets/`, `tools/rehash.py`), statische bestanden naar `public/`.
+
 ## 2026-10-10 (middag) — Schijfduel-bot
 - #4: `sw.js` toegevoegd (minimaal, geen cache, wist oude caches); OG/X-afbeeldingen en `og:url` naar koen2222.github.io/Duel; Grok-extensiescript en grok-meta verwijderd; ongebruikte `rondel-dex.js` verwijderd (dex staat in `src/dex.json` en in de build).
 - #5: cache-busting via `tools/rehash.py` (versiehash in namen van index/routes/styles); oude namen blijven als kopie zodat een verouderde index.html toch de nieuwe code laadt.
