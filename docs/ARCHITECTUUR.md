@@ -4,6 +4,14 @@
 
 ## 1. Opbouw van de build
 
+### Vite-build (vanaf #2)
+- Bron in `src/`: `index.html` (pagina), `main.js` (startpunt), `engine.js`, `screens.html`, `dex.json`, `styles.css`. Instellingen in `vite.config.js`.
+- `npm run build` → `dist/`. De plugin `schijfduel-schermen` zet `screens.html` in de HTML (`<!-- SCHERMEN -->`); `schijfduel-statisch` kopieert `art/`, `__grok/`, `favicon.svg`, `og.jpg`, `x-banner.jpg` en `sw.js` mee en serveert ze tijdens `npm run dev`.
+- `main.js` doet wat de React-schil deed: CSS laden, `window.RONDEL_DEX = dex`, en `engine.js` (als `?raw`-tekst) uitvoeren in een `<script id="rondel-engine-script">`. Geen React, TanStack of Grok-scripts meer.
+- JS, CSS en `home-lobby.jpg` krijgen een hash in hun naam; `art/` niet (een gewijzigd plaatje kan tot ~10 min in de cache van GitHub Pages blijven).
+- `.github/workflows/pages.yml` bouwt en draait `test/smoke.mjs ../dist` bij elke PR en elke push naar `main`, en publiceert `dist/` op Pages vanaf `main`.
+
+### Oude Grok-build (root, tot de overstap naar GitHub Actions)
 - `index.html` — door TanStack Start (React, SSR) gegenereerde pagina met de schermen al voorgerenderd in `<div id="rondel-root">`. Laadt `assets/index-v<hash>.js` (React + router-runtime, geen spellogica) en `assets/routes-v<hash>.js`.
 - `assets/routes-v<hash>.js` — de route-component `l()`. Die bevat drie grote literals:
   - `i`: HTML van alle schermen → nu `src/screens.html`
