@@ -5,7 +5,7 @@ Bijgewerkt: 2026-10-10. Issues op GitHub hebben labels `bron`, `bug`, `online`, 
 ## Fase 0 — Bewerkbare bron (label `bron`)
 - [x] Engine, schermen en dex uit de build gehaald → `src/` (zie `src/README.md`). Goed nieuws: de build bevatte de engine met originele commentaren.
 - [ ] Koen: kijk of de Grok app builder (pokemonduel2.grok.me) een project-export heeft; zo ja, vergelijken met `src/`.
-- [ ] Vite-project opzetten: `src/main.js` laadt dex, schermen, CSS en engine; `npm run build` → `dist/`; GitHub Action deployt naar Pages. React/TanStack-schil en Grok-scripts zijn dan niet meer nodig.
+- [x] Vite-project opzetten (#2): `src/main.js` laadt dex, schermen, CSS en engine; `npm run build` → `dist/`; GitHub Action deployt naar Pages. React/TanStack-schil en Grok-scripts zijn dan niet meer nodig.
 - [ ] Engine opsplitsen in modules: `board`, `rules` (puur), `combat`, `ai`, `ui`, `audio`, `i18n`, `profile`.
 
 ## Fase 1 — Bugs en afwerking (label `bug`)
