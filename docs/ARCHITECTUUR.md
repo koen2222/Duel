@@ -63,7 +63,7 @@ Commit 1445765 herstelde de ontbrekende `spin()`-aanroep (in build én dus in `s
 `aiTurn()` (r. ~5135), speler `AI = 'p2'`. Niveaus `AI_LEVELS` (makkelijk/normaal/moeilijk: jitter, slip, horizon, …). Heuristieken: `rushThreat`, `combatEV`, `distTo`, `abilityPosBonus`, `aiUsePlate`, verdediging van `GOAL_ZONE = ['G2','T2','T3']`. Teams: `aiDeck()` / `AI_DECKS` op basis van zeldzaamheid.
 
 ## 9. Opslag (localStorage)
-Eén sleutel `rondel_profile` (`loadProfile`/`saveProfile`): `credits` (start 400), `owned` (figuur → level), `stats` (wins/losses), `settings`, `decks` (3 opgeslagen teams). Instellingen: `SETTING_DEFS` (volume, animatiesnelheid, arena, klok 3/5/10/uit, moeilijkheid, taal, autoEndTurn, …).
+Eén sleutel `schijfduel_profile` (`PROFILE_KEY`; `loadProfile`/`saveProfile`). Is die er nog niet, dan wordt `rondel_profile` éénmalig overgenomen en daarna niet meer aangeraakt (Rondel staat op hetzelfde domein, #17). Inhoud: `credits` (start 400), `owned` (figuur → level), `stats` (wins/losses), `settings`, `decks` (3 opgeslagen teams). Instellingen: `SETTING_DEFS` (volume, animatiesnelheid, arena, klok 3/5/10/uit, moeilijkheid, taal, autoEndTurn, …).
 Economie: winst +100 / verlies +25 credits (alleen solo), booster 150 (kansen C 65%, U 27%, R 8%), dubbelen geven credits terug.
 
 ## 10. i18n

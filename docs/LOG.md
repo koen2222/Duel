@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — save-sleutel
+- #17: profiel staat nu onder `schijfduel_profile`; `rondel_profile` (gedeeld met Rondel op hetzelfde domein) wordt alleen éénmalig overgenomen en daarna niet meer aangeraakt. Werkt live pas via de Vite-build (#2).
+- Rooktest: het vooraf ingestelde profiel was onvolledig en werd door `loadProfile` weggegooid; nu volledig, dus animaties echt uit (potje ~50 s i.p.v. ~2 min).
+
 ## 2026-10-10 (middag) — Claude
 - #2: Vite-setup. Bron in `src/` (nieuw: `index.html`, `main.js`, `styles.css`), `npm run build` → `dist/`, GitHub Action `pages.yml` bouwt, draait de rooktest en publiceert. `test/smoke.mjs` accepteert nu een map (`node smoke.mjs ../dist`).
 - Getest: rooktest op `dist/` en op de oude build geslaagd; collectie- en uitlegscherm pixel-identiek aan de oude build, geen 404's of consolefouten.

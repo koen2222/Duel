@@ -485,6 +485,12 @@ function normalizeSettings(raw) {
 // SETTINGS-END (marker voor headless tests — niet verwijderen)
 
 let profile;
+// Eigen opslagsleutel. Rondel staat op hetzelfde domein (koen2222.github.io) en
+// gebruikt 'rondel_profile'; die nemen we alleen éénmalig over als er nog geen
+// Schijfduel-profiel is (migrateOwned vertaalt de oude sleutels) en laten we
+// daarna met rust, zodat Rondel zijn eigen voortgang houdt.
+const PROFILE_KEY = 'schijfduel_profile';
+const RONDEL_PROFILE_KEY = 'rondel_profile';
 const DECK_SLOTS = 3;
 function freshProfile() { return { credits: 400, owned: { p001:1, p004:1, p007:1, p025:1, p092:1, p147:1 }, stats: { wins:0, losses:0 }, settings: freshSettings(), decks: Array(DECK_SLOTS).fill(null) }; }
 // Opgeslagen teams valideren: units die je niet (meer) bezit vallen weg, en een
@@ -525,9 +531,10 @@ function migrateOwned(owned) {
   return out;
 }
 function loadProfile() {
-  let upgraded = false;
+  let upgraded = false, overgenomen = false;
   try {
-    const rawStr = localStorage.getItem('rondel_profile');
+    let rawStr = localStorage.getItem(PROFILE_KEY);
+    if (rawStr === null) { rawStr = localStorage.getItem(RONDEL_PROFILE_KEY); overgenomen = rawStr !== null; }
     const raw = rawStr ? JSON.parse(rawStr) : null;
     profile = raw || freshProfile();
     if (raw && raw.settings && raw.settings.bgmDuel === undefined) upgraded = true;
@@ -542,10 +549,10 @@ function loadProfile() {
   if (upgraded) {
     profile.settings.music = true;
     profile.settings.bgmDuel = true;
-    saveProfile();
   }
+  if (upgraded || overgenomen) saveProfile();
 }
-function saveProfile() { try { localStorage.setItem('rondel_profile', JSON.stringify(profile)); } catch(e) {} }
+function saveProfile() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e) {} }
 // Korte accessor; valt terug op de default als het profiel nog niet geladen is.
 function S(key) {
   const s = profile && profile.settings ? profile.settings : null;
