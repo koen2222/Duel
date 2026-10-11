@@ -3796,12 +3796,10 @@ function onNodeTap(nodeKey) {
     const targetUnit = unitAt(nodeKey);
 
     if (targetUnit && targetUnit.owner !== u.owner) {
-      const path = bfs(u.node, nodeKey);
-      if (path && path.length > 1) {
-        const standNode = path[path.length - 2];
-        if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, targetUnit); }); } 
-        else { state.actionsLeft--; runCombat(u, targetUnit); }
-      }
+      const standNode = standplaatsVoor(u, nodeKey);
+      if (!standNode) { state.locked = false; return; }
+      if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, targetUnit); }); }
+      else { state.actionsLeft--; runCombat(u, targetUnit); }
       return;
     }
 
@@ -4095,7 +4093,9 @@ function legalMoves(u) {
     for (const nx of ADJ[n]) {
       const occ = unitAt(nx);
       if (occ && occ.owner !== u.owner) {
-        if (!frozen) out.add(nx);                             // aanvallen op de vijand
+        // aanvallen op de vijand — alleen vanaf een punt waar je kunt staan; wie
+        // over een figuur heen vliegt/sluipt, kan niet vanaf diens plek vechten
+        if (!frozen && (n === u.node || !unitAt(n))) out.add(nx);
         if (phase && (!seen.has(nx) || seen.get(nx) > d+1)) { seen.set(nx, d+1); q.push([nx, d+1]); } // eroverheen
         continue;
       }
@@ -4108,6 +4108,25 @@ function legalMoves(u) {
     }
   }
   return out;
+}
+
+// Het dichtstbijzijnde punt (binnen MP, met dezelfde loopregels als
+// legalMoves) naast `doel` waar u kan staan om aan te vallen; null als dat niet kan.
+function standplaatsVoor(u, doel) {
+  const phase = canPhase(u), mp = effMP(u);
+  const seen = new Set([u.node]), q = [[u.node, 0]];
+  while (q.length) {
+    const [n, d] = q.shift();
+    if (ADJ[n].has(doel) && (n === u.node || !unitAt(n))) return n;
+    if (d >= mp - 1) continue;
+    for (const nx of ADJ[n]) {
+      if (seen.has(nx)) continue;
+      const occ = unitAt(nx);
+      if (occ && !phase) continue;
+      seen.add(nx); q.push([nx, d + 1]);
+    }
+  }
+  return null;
 }
 
 function unitAt(k) { return Object.values(state.units).find(u => u.node === k); }
@@ -5239,9 +5258,8 @@ function aiTurn() {
     if (best.type === 'deploy') { state.locked = true; doDeploy(state.units[best.uid], best.target).then(() => { state.actionsLeft--; state.locked = false; afterAction(); }); }
     else if (best.type === 'move') { state.locked = true; moveUnit(state.units[best.uid], best.target).then(()=>{ const g = NODES[best.target]; if (g.type==='goal' && g.owner !== AI) { endMatch(AI, 'goal'); return; } state.actionsLeft--; state.locked = false; afterAction(); }); }
     else if (best.type === 'attack') { 
-        state.locked = true; const u = state.units[best.uid]; const path = bfs(u.node, best.target);
-        if (path && path.length > 1) {
-            const standNode = path[path.length - 2];
+        state.locked = true; const u = state.units[best.uid]; const standNode = standplaatsVoor(u, best.target);
+        if (standNode) {
             if (standNode !== u.node) { moveUnit(u, standNode).then(() => { state.actionsLeft--; runCombat(u, state.units[best.defenderUid]); }); }
             else { state.actionsLeft--; runCombat(u, state.units[best.defenderUid]); }
         } else { state.locked = false; setTimeout(endTurn, 300); }
