@@ -47,6 +47,14 @@
         </span>
         <div class="tname" data-i18n="nav.hotseat">Hotseat</div>
       </div>
+      <div class="home-tile home-dock-btn" id="tile-online">
+        <span class="ico-wrap">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12 H21"/><path d="M12 3 Q17 12 12 21 Q7 12 12 3 Z"/>
+          </svg>
+        </span>
+        <div class="tname" data-i18n="nav.online">Online</div>
+      </div>
       <div class="home-tile home-dock-btn" id="tile-help">
         <span class="ico-wrap">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -331,6 +339,28 @@
     <div class="evo-bonus" data-i18n="evo.bonus">+10 op elk wit en goud vak · +1 ★ op elk paars vak</div>
     <button class="btn primary" id="btn-evo-ja" style="flex:0 0 auto; width:100%; margin-top:16px;" data-i18n="evo.yes">Evolueren!</button>
     <button class="btn" id="btn-evo-nee" style="flex:0 0 auto; width:100%; margin-top:8px;" data-i18n="evo.no">Nog even niet</button>
+  </div>
+</div>
+<!-- ===== ONLINE: kamer maken of meedoen (#10; teksten zet src/online.js) ===== -->
+<div id="online-overlay" class="overlay">
+  <div class="result-panel online-panel">
+    <div class="pause-kicker">SCHIJFDUEL</div>
+    <div class="result-title" id="online-titel">ONLINE</div>
+    <div id="online-keuze" class="online-blok">
+      <button class="btn primary" id="btn-online-maak">Kamer maken</button>
+      <div class="online-of" id="online-of">of doe mee met een code</div>
+      <div class="online-rij">
+        <input id="online-code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Kamercode">
+        <button class="btn" id="btn-online-mee">Meedoen</button>
+      </div>
+    </div>
+    <div id="online-kamer" class="online-blok" hidden>
+      <div class="online-uitleg" id="online-uitleg">Geef deze code aan je tegenstander</div>
+      <div class="online-code" id="online-kamercode">····</div>
+      <button class="btn" id="btn-online-deel">Link delen</button>
+    </div>
+    <div class="result-reason" id="online-status"></div>
+    <button class="btn" id="btn-online-terug">‹ Terug</button>
   </div>
 </div>
 <div id="kaart-fx"></div>
