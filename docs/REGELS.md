@@ -1,6 +1,6 @@
 # Spelregels Schijfduel
 
-> **Uit de code gehaald** (`src/engine.js`, stand 2026-10-10). Dit beschrijft wat het digitale spel nu doet, niet per se de definitieve regels. Onzeker: **(?)**.
+> **Uit de code gehaald** (de engine, sinds #3 in `src/engine/`; stand 2026-10-10). Dit beschrijft wat het digitale spel nu doet, niet per se de definitieve regels. Onzeker: **(?)**.
 
 ## Doel
 Zet een eigen figuur op het **doel van de tegenstander** (p1 valt `G2` boven aan, p2 valt `G1` onder aan). Dat kan door erheen te lopen of door een gevecht op dat punt te winnen.

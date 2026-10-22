@@ -7,12 +7,12 @@ Schijfduel ("Draai de schijf. Verover het doel.") is een tactisch figurenspel me
 Live: https://koen2222.github.io/Duel/ (GitHub Pages vanaf `main`, root).
 
 ## Waar staat wat
-- `src/` — **de bron**: `engine.js` (spel), `screens.html` (schermen), `dex.json` (151 figuren), `styles.css`, en het Vite-startpunt `index.html` + `main.js` (zie `src/README.md`). `npm run build` → `dist/`.
+- `src/` — **de bron**: `engine/` (het spel, in delen per onderdeel; zie `src/engine/README.md`), `screens.html` (schermen), `dex.json` (151 figuren), `styles.css`, en het Vite-startpunt `index.html` + `main.js` (zie `src/README.md`). `npm run build` → `dist/`.
 - `.github/workflows/pages.yml` — bouwt en test elke PR; publiceert `dist/` op Pages na elke merge in `main`.
 - `public/` — statische bestanden die ongewijzigd mee gaan naar de site: `art/` (figuurplaatjes, de dex verwijst naar `art/pNNN.png`), `favicon.svg`, `og.jpg`, `x-banner.jpg`, `sw.js`, `manifest.webmanifest`, `icon-180.png`. Verwijs ernaar met een `/` vooraan (`/favicon.svg`); Vite zet daar zelf `/Duel/` voor.
 - `docs/ARCHITECTUUR.md` — hoe de code werkt. `docs/REGELS.md` — regels uit de code. `docs/ROADMAP.md` — fases. `docs/ONLINE.md` — onlineontwerp. `docs/LOG.md` — samenwerkingslog.
 - `print/` — bordspel-printbestanden.
-- **Online** (`src/online.js` + sectie ONLINE in `src/engine.js`, zie `docs/ONLINE.md`): beide spelers draaien de engine en moeten precies hetzelfde doen. Toeval in de spelregels dus nooit los met `Math.random()` maar via de schijf (`spin()`, gedeelde toevalsbron); voor animaties en geluid mag `Math.random()` wel.
+- **Online** (`src/online.js` + `src/engine/08-online.js`, zie `docs/ONLINE.md`): beide spelers draaien de engine en moeten precies hetzelfde doen. Toeval in de spelregels dus nooit los met `Math.random()` maar via de schijf (`spin()`, gedeelde toevalsbron); voor animaties en geluid mag `Math.random()` wel.
 
 ## Werkwijze
 1. Pak een issue (of maak er een). Zet in een comment dat je ermee bezig bent.

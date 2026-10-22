@@ -11,7 +11,7 @@ Koen koos voor **optie A** (WebRTC via PeerJS, geen eigen server) met **ieders e
 - Het enige toeval tijdens een potje is waar de schijf stopt. De host kiest bij de start één **startgetal**; beide engines trekken daaruit (Mulberry32) dezelfde schijfuitkomsten in dezelfde volgorde.
 - Vooraf: `hallo` (met een hash van engine + dex: verschillende versies kunnen niet tegen elkaar), `team` (units, kaarten, evoluties en levels uit je collectie), `start` (startgetal, wie begint). `hallo` wordt elke seconde herhaald tot die van de ander binnen is: een bericht dat precies bij het openen van het kanaal wordt verstuurd, kwam in de test 1 op de 10 keer niet aan.
 - Elke 4 s een `ping`; 45 s niets gehoord, of de pagina gaat dicht → de ander wint met "verbinding verbroken".
-- Code: `src/online.js` (verbinden, kamerscherm) en de sectie **ONLINE** in `src/engine.js` (spiegelen, afspelen, toevalsbron). Test: `test/online.mjs` speelt een heel potje tussen twee browsers met een eigen PeerServer en controleert na elke zet dat beide borden (gespiegeld) exact gelijk zijn.
+- Code: `src/online.js` (verbinden, kamerscherm) en de sectie **ONLINE** in `src/engine/08-online.js` (spiegelen, afspelen, toevalsbron). Test: `test/online.mjs` speelt een heel potje tussen twee browsers met een eigen PeerServer en controleert na elke zet dat beide borden (gespiegeld) exact gelijk zijn.
 
 **Beperkingen van deze versie:**
 - Verbinden gaat via de gratis PeerJS-server (0.peerjs.com) en de openbare STUN/TURN-servers van PeerJS. Op strenge netwerken (school, werk) kan verbinden mislukken.

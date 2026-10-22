@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Balansanalyse (#8): rekent voor elke figuur uit hoe vaak hij een gevecht wint
 // tegen elke andere figuur, puur op basis van de schijven. De regels
-// (resolve() en verwante functies) worden rechtstreeks uit src/engine.js
-// gelezen, zodat dit script nooit van het spel afwijkt.
+// (resolve() en verwante functies) worden rechtstreeks uit de engine
+// (src/engine/) gelezen, zodat dit script nooit van het spel afwijkt.
 //
 // Gebruik:  node tools/balans.mjs          → markdown (zie docs/BALANS.md)
 //           node tools/balans.mjs --csv    → alle figuren als CSV
@@ -12,15 +12,16 @@
 // veld (verslagen of naar de zijlijn), "verlies" = zelf van het veld.
 import fs from 'node:fs';
 import path from 'node:path';
+import { leesEngine } from './engine.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const engine = fs.readFileSync(path.join(ROOT, 'src/engine.js'), 'utf8');
+const engine = leesEngine();
 const dex = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/dex.json'), 'utf8'));
 
 // --- Regels uit de engine halen ---------------------------------------------
 function bron(naam) {
   const i = engine.indexOf(`function ${naam}(`);
-  if (i < 0) throw new Error(`${naam}() niet gevonden in src/engine.js`);
+  if (i < 0) throw new Error(`${naam}() niet gevonden in src/engine/`);
   let j = engine.indexOf('{', i);
   for (let diepte = 0; j < engine.length; j++) {
     if (engine[j] === '{') diepte++;
@@ -147,7 +148,7 @@ if (process.argv.includes('--csv')) {
 }
 
 const out = [];
-out.push(`Gegenereerd met \`node tools/balans.mjs\` uit \`src/dex.json\` en \`src/engine.js\` (${figuren.length} figuren).`, '');
+out.push(`Gegenereerd met \`node tools/balans.mjs\` uit \`src/dex.json\` en \`src/engine/\` (${figuren.length} figuren).`, '');
 out.push('### Gemiddelde netto per zeldzaamheid en MP', '');
 out.push('Netto = kans dat de tegenstander van het veld gaat min kans dat je zelf van het veld gaat, gemiddeld over alle 151 tegenstanders. Tussen haakjes: aantal figuren.', '');
 out.push('| Zeldz. | MP 0 | MP 1 | MP 2 | MP 3 | Alle |', '|---|---|---|---|---|---|');

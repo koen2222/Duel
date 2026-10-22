@@ -10,6 +10,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { leesEngine } from '../tools/engine.mjs';
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.argv[2] || path.join(HIER, '../dist'));
@@ -18,7 +19,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 const fail = (m) => { console.error('FAIL:', m); process.exitCode = 1; };
 
 // Spiegeling van het bord, berekend uit de echte bordcode in de engine.
-const engine = fs.readFileSync(path.join(HIER, '../src/engine.js'), 'utf8');
+const engine = leesEngine();
 const bordCode = engine.slice(engine.indexOf('const BOARD_CX'), engine.indexOf('const ADJ = {}'));
 const NODES = new Function(`${bordCode}; return NODES;`)();
 const SPIEGEL = {};
