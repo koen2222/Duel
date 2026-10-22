@@ -17,7 +17,7 @@ Bijgewerkt: 2026-10-10. Issues op GitHub hebben labels `bron`, `bug`, `online`, 
 
 ## Fase 2 — Regels en inhoud (label `regels`)
 - [ ] `docs/REGELS.md` laten bevestigen door Koen; afwijkingen van Duel en huisregels vastleggen.
-- [ ] Balans van de 151 figuren en 21 kaarten nalopen.
+- [ ] Balans van de 151 figuren en 21 kaarten nalopen. Analyse klaar: `docs/BALANS.md` (#8); wachten op keuzes van Koen.
 - [ ] Uitleg/tutorial in het spel bijwerken.
 
 ## Fase 3 — Onlinemodus (label `online`)

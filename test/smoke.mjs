@@ -35,7 +35,10 @@ page.on('console', m => { if (m.type() === 'error' && !/favicon|fonts\.g|ERR_|40
 
 // Snelle instellingen: animaties uit, geen klok.
 await page.addInitScript(() => {
-  if (!localStorage.getItem('rondel_profile')) localStorage.setItem('rondel_profile', JSON.stringify({ settings: { animSpeed: 'uit', clockMinutes: 0, lang: 'nl' } }));
+  // Een volledig profiel, anders gooit loadProfile() het weg. Onder beide sleutels:
+  // 'schijfduel_profile' (nieuw, #17) en 'rondel_profile' (oude build).
+  const p = JSON.stringify({ credits: 400, owned: { p001: 1, p004: 1, p007: 1, p025: 1, p092: 1, p147: 1 }, settings: { animSpeed: 'uit', clockMinutes: 0, lang: 'nl' } });
+  for (const k of ['schijfduel_profile', 'rondel_profile']) if (!localStorage.getItem(k)) localStorage.setItem(k, p);
 });
 await page.goto(base + '?smoke=' + Date.now(), { waitUntil: 'load' });
 await page.waitForFunction(() => window.__rondelQA && document.querySelector('#tile-solo'), null, { timeout: 15000 });
