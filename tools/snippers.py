@@ -6,8 +6,8 @@ stukje van de figuur ernaast. Dit script zoekt in elk plaatje de losse
 'eilandjes' (aaneengesloten niet-transparante pixels) die de rand raken en
 kleiner zijn dan de figuur zelf, en maakt die doorzichtig.
 
-Gebruik:  python3 tools/snippers.py --check art/*.png          (alleen melden)
-          python3 tools/snippers.py art/p014.png art/p017.png   (schrijft terug)
+Gebruik:  python3 tools/snippers.py --check public/art/*.png                 (alleen melden)
+          python3 tools/snippers.py public/art/p014.png public/art/p017.png   (schrijft terug)
 
 Controleer altijd eerst met --check en bekijk het plaatje: een los onderdeel van
 de figuur zelf dat tegen de rand staat (zoals de vlammetjes van skeleton.png of

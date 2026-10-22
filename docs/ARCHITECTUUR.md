@@ -6,24 +6,18 @@
 
 ### Vite-build (vanaf #2)
 - Bron in `src/`: `index.html` (pagina), `main.js` (startpunt), `engine.js`, `screens.html`, `dex.json`, `styles.css`. Instellingen in `vite.config.js`.
-- `npm run build` → `dist/`. De plugin `schijfduel-schermen` zet `screens.html` in de HTML (`<!-- SCHERMEN -->`); `schijfduel-statisch` kopieert `art/`, `__grok/`, `favicon.svg`, `og.jpg`, `x-banner.jpg` en `sw.js` mee en serveert ze tijdens `npm run dev`.
+- `npm run build` → `dist/`. De plugin `schijfduel-schermen` zet `screens.html` in de HTML (`<!-- SCHERMEN -->`). Alles in `public/` gaat ongewijzigd mee naar `dist/` en wordt tijdens `npm run dev` geserveerd:
+  - `art/` — figuurplaatjes (pad per figuur in de dex, veld `art`) en `home-lobby.jpg` (achtergrond van het menu, vanuit `styles.css`).
+  - `sw.js` — minimale service worker zonder cache (wist oude caches, neemt direct over).
+  - `manifest.webmanifest` en `icon-180.png` — app-manifest en -icoon (het icoon is nog het Grok-placeholder, zie #28).
+  - `favicon.svg`, `og.jpg`, `x-banner.jpg`.
+  Verwijs in `src/` naar deze bestanden met een `/` vooraan (`/favicon.svg`, `url(/art/home-lobby.jpg)`); Vite zet daar bij het bouwen `/Duel/` voor. De engine en de dex gebruiken relatieve paden (`art/p010.png`, `sw.js`); die werken omdat de pagina zelf op `/Duel/` staat.
 - `main.js` doet wat de React-schil deed: CSS laden, `window.RONDEL_DEX = dex`, en `engine.js` (als `?raw`-tekst) uitvoeren in een `<script id="rondel-engine-script">`. Geen React, TanStack of Grok-scripts meer.
-- JS, CSS en `home-lobby.jpg` krijgen een hash in hun naam; `art/` niet (een gewijzigd plaatje kan tot ~10 min in de cache van GitHub Pages blijven).
-- `.github/workflows/pages.yml` bouwt en draait `test/smoke.mjs ../dist` bij elke PR en elke push naar `main`, en publiceert `dist/` op Pages vanaf `main`.
+- JS en CSS krijgen een hash in hun naam; bestanden uit `public/` niet (een gewijzigd plaatje kan tot ~10 min in de cache van GitHub Pages blijven).
+- `.github/workflows/pages.yml` bouwt en draait `test/smoke.mjs` en `test/online.mjs` op `dist/` bij elke PR en elke push naar `main`, en publiceert `dist/` op Pages vanaf `main`.
 
-### Oude Grok-build (root, tot de overstap naar GitHub Actions)
-- `index.html` — door TanStack Start (React, SSR) gegenereerde pagina met de schermen al voorgerenderd in `<div id="rondel-root">`. Laadt `assets/index-v<hash>.js` (React + router-runtime, geen spellogica) en `assets/routes-v<hash>.js`.
-- `assets/routes-v<hash>.js` — de route-component `l()`. Die bevat drie grote literals:
-  - `i`: HTML van alle schermen → nu `src/screens.html`
-  - `a`: de volledige engine als tekst → nu `src/engine.js`
-  - `o`: de dex (151 figuren) als JSON → nu `src/dex.json`
-  In een `useLayoutEffect` zet de component `window.RONDEL_DEX = o`, vult `#rondel-root` met `i` en voegt een `<script id="rondel-engine-script">` met tekst `a` toe. Versiemarker: `schijfduel-bgm-1` (`__RONDEL_ENGINE_VER`).
-- React is dus alleen een schil; **het spel zelf is één vanilla-JS-script** dat de DOM en een SVG-bord direct aanstuurt.
-- `assets/styles-v<hash>.css` — alle stijlen.
-- `art/` — figuurplaatjes (pad per figuur in de dex, veld `art`).
-- `__grok/` — manifest en icoon (mapnaam uit de Grok-build; wordt ook door de index-JS gebruikt, dus laten staan).
-- `sw.js` — minimale service worker zonder cache (wist oude caches, neemt direct over).
-- Bestandsnamen in `assets/` dragen een versiehash (`-v<hash>`); na elke wijziging `python3 tools/rehash.py` draaien. De oude Grok-namen (`index-C7hcOzN5.js` enz.) blijven als kopie bestaan voor verouderde gecachete `index.html`.
+### Oude Grok-build (verwijderd in #24)
+Tot de overstap naar GitHub Actions stond in de root de build uit Grok app builder: `index.html` (TanStack Start, React, SSR) met `assets/index-*.js` (React-runtime), `assets/routes-*.js` en `assets/styles-*.css`, plus `tools/rehash.py` voor de versiehashes. De route-component in `routes-*.js` bevatte drie grote literals: de HTML van alle schermen (nu `src/screens.html`), de volledige engine als tekst (nu `src/engine.js`) en de dex (nu `src/dex.json`). In een `useLayoutEffect` zette hij `window.RONDEL_DEX`, vulde `#rondel-root` en voegde een `<script id="rondel-engine-script">` met de engine toe; `src/main.js` doet nu hetzelfde. React was dus alleen een schil: **het spel zelf is één vanilla-JS-script** dat de DOM en een SVG-bord direct aanstuurt. Versiemarker: `schijfduel-bgm-1` (`__RONDEL_ENGINE_VER`). De oude bestanden staan nog in de git-geschiedenis.
 
 ### Bron terugwinnen
 `src/` is gemaakt met een klein Node-script (acorn): parse `routes-*.js`, pak de template-literals `i` en `a` en het argument van `JSON.parse` (`o`). Zie de commit van 2026-10-10.

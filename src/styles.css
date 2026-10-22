@@ -3959,7 +3959,7 @@ body {
   padding: calc(14px + env(safe-area-inset-top)) 14px 0;
   background:
     linear-gradient(#040a16b8 0%, #040a162e 18%, #040a160d 38%, #040a1647 72%, #040a16d1 100%),
-    url(../art/home-lobby.jpg) 50% 42% / cover no-repeat,
+    url(/art/home-lobby.jpg) 50% 42% / cover no-repeat,
     #071428;
   flex-direction: column;
   gap: 10px;
