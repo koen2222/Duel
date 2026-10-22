@@ -2,6 +2,9 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — vliegende aanval
+- #22: vliegende/sluipende figuren konden bij een aanval verder lopen dan hun MP (omweg via `bfs` zonder over figuren te gaan). Nieuw: `standplaatsVoor(u, doel)`; `legalMoves` biedt alleen nog aanvallen aan vanaf een punt waar je kunt staan; speler en AI gebruiken dezelfde standplaats. Werkt live via de Vite-build (#2).
+
 ## 2026-10-10 (middag) — Claude — plaatjes
 - #15: plaatjes van #11–#18 en #70/#74 op de juiste figuur gezet (alleen bestanden hernoemd, dex ongewijzigd).
 - #15: snippers van buurfiguren uit 36 plaatjes gehaald met het nieuwe `tools/snippers.py`; `skeleton.png` en `p109.png` bewust overgeslagen (losse vlammetjes/belletjes horen bij de figuur).
