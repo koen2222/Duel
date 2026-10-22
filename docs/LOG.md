@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — balans
+- #8: analyse in `docs/BALANS.md`, gemaakt met het nieuwe `tools/balans.mjs` (rekent met de echte regels uit de engine). Belangrijkste: 50 figuren hebben een van 4 sjabloonschijven; uitschieters Buidelstoot, Kiezelkop, Neveling; Tweede Kans en Verblinding leveren gemiddeld niets op.
+- Open vragen voor Koen: zie `docs/BALANS.md`, "Vragen aan Koen".
+
 ## 2026-10-10 (middag) — Claude — save-sleutel
 - #17: profiel staat nu onder `schijfduel_profile`; `rondel_profile` (gedeeld met Rondel op hetzelfde domein) wordt alleen éénmalig overgenomen en daarna niet meer aangeraakt. Werkt live pas via de Vite-build (#2).
 - Rooktest: het vooraf ingestelde profiel was onvolledig en werd door `loadProfile` weggegooid; nu volledig, dus animaties echt uit (potje ~50 s i.p.v. ~2 min).
