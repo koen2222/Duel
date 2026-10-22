@@ -5775,3 +5775,52 @@ body,
     opacity: 0.5;
   }
 }
+
+/* ===== Online (#10) ===== */
+.online-blok {
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  display: flex;
+}
+.online-blok[hidden] {
+  display: none;
+}
+.online-of,
+.online-uitleg {
+  color: #9bb0c9;
+  font-size: 0.85rem;
+}
+.online-rij {
+  gap: 8px;
+  display: flex;
+}
+.online-rij input {
+  color: var(--ink);
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  background: #071428cc;
+  border: 1px solid #f59e0b66;
+  border-radius: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 6px 10px 12px;
+  font-family: Fredoka, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.online-code {
+  color: var(--gold);
+  letter-spacing: 0.35em;
+  text-shadow: 0 0 18px var(--gold-glow);
+  padding-left: 0.35em;
+  font-family: Fredoka, sans-serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.online-panel #btn-online-terug {
+  width: 100%;
+  margin-top: 14px;
+}
