@@ -2,7 +2,7 @@
 // (met een eigen PeerServer, dus zonder internet) en spelen een heel potje.
 // Na elke zet wordt gecontroleerd dat beide engines, gespiegeld, exact
 // hetzelfde bord hebben.
-// Gebruik: npm run build (in de root), dan in test/: node online.mjs ../dist
+// Gebruik: npm run build (in de root), dan in test/: node online.mjs (of: node online.mjs <map>)
 // Chrome-pad via CHROME=/pad/naar/chrome (standaard /usr/bin/google-chrome).
 import { chromium } from 'playwright-core';
 import { PeerServer } from 'peer';

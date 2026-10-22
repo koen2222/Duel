@@ -1,6 +1,6 @@
 // Rooktest Schijfduel: speelt een solo-potje via echte klikken in een headless browser.
-// Gebruik: node smoke.mjs            (serveert de repo zelf onder /Duel/)
-//          node smoke.mjs ../dist    (serveert die map onder /Duel/, bijv. de Vite-build)
+// Gebruik: node smoke.mjs            (serveert ../dist onder /Duel/; eerst `npm run build` in de root)
+//          node smoke.mjs <map>      (serveert die map onder /Duel/)
 //          BASE_URL=https://koen2222.github.io/Duel/ node smoke.mjs   (live testen)
 // Chrome-pad via CHROME=/pad/naar/chrome (standaard /usr/bin/google-chrome).
 import { chromium } from 'playwright-core';
@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
+const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(fileURLToPath(import.meta.url)), '../dist'));
 const MAX_TURNS = Number(process.env.MAX_TURNS || 80);
 const TYPES = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json' };
 

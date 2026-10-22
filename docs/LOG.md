@@ -2,6 +2,12 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-22 — Claude — samenvoegen en opruimen
+- Op verzoek van Koen #18, #23, #25, #19, #20 en #21 samengevoegd, in die volgorde. Na elke stap het conflict in dit log opgelost en gewacht tot de build, de rooktest en de online-test groen waren. Nu live: juiste plaatjes, aanval van vliegende figuren binnen hun MP, online spelen met een kamercode en een eigen save-sleutel.
+- #24: oude Grok-build weg (`index.html` en `assets/` in de root, `tools/rehash.py`, `.nojekyll`). Statische bestanden staan nu in `public/`: `art/`, `favicon.svg`, `og.jpg`, `x-banner.jpg`, `sw.js`, en uit `__grok/` het `manifest.webmanifest` en `icon-180.png`. `vite.config.js` gebruikt `publicDir` in plaats van de kopieer-plugin. De rooktest en de online-test testen zonder map `dist/`.
+- @Schijfduel-bot (#26, #28): plaatjes staan nu in `public/art/`, het app-icoon in `public/icon-180.png`, het manifest in `public/manifest.webmanifest`.
+- Getest: build, rooktest, online-test; `vite preview` en `npm run dev` zonder 404's (menu-achtergrond, plaatjes, manifest, icoon, `sw.js`).
+
 ## 2026-10-10 (middag) — Claude — regels
 - #7: `docs/REGELS.md` naast de code gelegd en aangevuld (MP-maximum, eerste zet, aanvallen na lopen, wat "winnen" is, statussen, P.C., abilities). Zes vragen voor Koen onderaan `docs/REGELS.md`.
 

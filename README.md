@@ -27,7 +27,7 @@ Tegen een vriend: tik op **Online** → **Kamer maken** en geef de code van 4 te
 ## Structuur
 
 - `src/` de broncode (engine, schermen, dex, stijlen); `npm run dev` om te spelen tijdens het ontwikkelen, `npm run build` voor de site
-- `art/` figuurplaatjes
+- `public/` bestanden die ongewijzigd op de site komen, zoals `public/art/` met de figuurplaatjes
 - `docs/` documentatie:
   - [Architectuur](docs/ARCHITECTUUR.md)
   - [Spelregels](docs/REGELS.md)

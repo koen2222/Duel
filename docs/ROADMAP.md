@@ -9,11 +9,11 @@ Bijgewerkt: 2026-10-10. Issues op GitHub hebben labels `bron`, `bug`, `online`, 
 - [ ] Engine opsplitsen in modules: `board`, `rules` (puur), `combat`, `ai`, `ui`, `audio`, `i18n`, `profile`.
 
 ## Fase 1 — Bugs en afwerking (label `bug`)
-- [ ] Ontbrekende `sw.js` (service worker 404) oplossen of registratie weghalen.
-- [ ] OG/X-meta naar `koen2222.github.io/Duel` laten wijzen; Grok-extensiescript verwijderen.
-- [ ] Cache-busting zodat spelers na een update niet vastzitten op een oude versie (Ctrl+Shift+R-probleem).
-- [ ] Rooktest (headless) voor een volledig potje incl. gevecht, zodat fouten zoals de ontbrekende `spin()` niet terugkomen.
-- [ ] Opruimen: `rondel-dex.js` in root, oude lege mappen.
+- [x] Ontbrekende `sw.js` (service worker 404) oplossen of registratie weghalen (#4).
+- [x] OG/X-meta naar `koen2222.github.io/Duel` laten wijzen; Grok-extensiescript verwijderen (#4).
+- [x] Cache-busting zodat spelers na een update niet vastzitten op een oude versie (Ctrl+Shift+R-probleem) (#5, nu via de hashes van Vite).
+- [x] Rooktest (headless) voor een volledig potje incl. gevecht, zodat fouten zoals de ontbrekende `spin()` niet terugkomen (#6).
+- [x] Opruimen: `rondel-dex.js` in root, oude lege mappen (#4); oude Grok-build en `tools/rehash.py` weg, statische bestanden naar `public/` (#24).
 
 ## Fase 2 — Regels en inhoud (label `regels`)
 - [ ] `docs/REGELS.md` laten bevestigen door Koen; afwijkingen van Duel en huisregels vastleggen.
