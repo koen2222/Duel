@@ -2,6 +2,10 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — save-sleutel
+- #17: profiel staat nu onder `schijfduel_profile`; `rondel_profile` (gedeeld met Rondel op hetzelfde domein) wordt alleen éénmalig overgenomen en daarna niet meer aangeraakt. Werkt live pas via de Vite-build (#2).
+- Rooktest: het vooraf ingestelde profiel was onvolledig en werd door `loadProfile` weggegooid; nu volledig, dus animaties echt uit (potje ~50 s i.p.v. ~2 min).
+
 ## 2026-10-10 (middag) — Claude — online
 - #10: online spelen met een kamercode, zonder server (Koens keuze: optie A, eigen collectie). Lockstep: beide engines spelen hetzelfde potje; alleen zetten (gespiegeld) en één startgetal voor de schijven gaan over de lijn. Nieuw: `src/online.js`, sectie ONLINE in `src/engine.js`, knop Online in het menu, `test/online.mjs` (ook in de GitHub Action).
 - Getest: telkens een heel potje tussen twee browsers (tot 150 zetten, met aanvallen, kaarten en evoluties); de borden waren na elke zet aan beide kanten exact gelijk. Opgeven en wegvallende verbinding getest.
