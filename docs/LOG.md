@@ -2,6 +2,12 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-10 (middag) — Claude — online
+- #10: online spelen met een kamercode, zonder server (Koens keuze: optie A, eigen collectie). Lockstep: beide engines spelen hetzelfde potje; alleen zetten (gespiegeld) en één startgetal voor de schijven gaan over de lijn. Nieuw: `src/online.js`, sectie ONLINE in `src/engine.js`, knop Online in het menu, `test/online.mjs` (ook in de GitHub Action).
+- Getest: telkens een heel potje tussen twee browsers (tot 150 zetten, met aanvallen, kaarten en evoluties); de borden waren na elke zet aan beide kanten exact gelijk. Opgeven en wegvallende verbinding getest.
+- Nog niet: klok, herverbinden, bescherming tegen valsspelen (dat komt met #9 en een server, optie C).
+- De online-test vond een vastloper die ook solo bestaat (#22, sluipende figuur zet het bord op slot); de fix uit #23 zit daarom ook in deze branch.
+
 ## 2026-10-10 (middag) — Claude — vliegende aanval
 - #22: vliegende/sluipende figuren konden bij een aanval verder lopen dan hun MP (omweg via `bfs` zonder over figuren te gaan). Nieuw: `standplaatsVoor(u, doel)`; `legalMoves` biedt alleen nog aanvallen aan vanaf een punt waar je kunt staan; speler en AI gebruiken dezelfde standplaats. Werkt live via de Vite-build (#2).
 

@@ -1,4 +1,29 @@
-# Onlinemodus — ontwerpvoorstel
+# Onlinemodus
+
+## Wat er nu is: kamercode zonder server (#10, 2026-10-10)
+Koen koos voor **optie A** (WebRTC via PeerJS, geen eigen server) met **ieders eigen collectie**.
+
+**Spelen:** tik op **Online** → **Kamer maken** → geef de code van 4 tekens (of de link `…/Duel/#kamer=K7QX`) aan je tegenstander → die tikt **Online**, vult de code in en kiest **Meedoen**. Daarna kiezen jullie allebei een team; zodra beide klaar zijn begint het potje. Wie begint wordt geloot. Geen schaakklok (nog), geen credits.
+
+**Hoe het werkt (lockstep):**
+- Beide spelers draaien de volledige engine. Iedereen ziet zichzelf als p1 (onderaan, blauw); de tegenstander is p2. Het bord is 180° symmetrisch, dus een zet wordt bij versturen gespiegeld: punt (kolom, rij) ↔ (6 − kolom, 4 − rij), figuur u1–u6 ↔ u7–u12.
+- Over de lijn gaan alleen de **zetten**: `inzet`, `zet` (lopen of aanvallen), `kaart` (index + doelwit), `einde` (beurt klaar), `evo` (wel/niet evolueren), `opgeven`. De andere kant voert ze uit met dezelfde functies als een tik (`onNodeTap`, `usePlate`, `endTurn`).
+- Het enige toeval tijdens een potje is waar de schijf stopt. De host kiest bij de start één **startgetal**; beide engines trekken daaruit (Mulberry32) dezelfde schijfuitkomsten in dezelfde volgorde.
+- Vooraf: `hallo` (met een hash van engine + dex: verschillende versies kunnen niet tegen elkaar), `team` (units, kaarten, evoluties en levels uit je collectie), `start` (startgetal, wie begint). `hallo` wordt elke seconde herhaald tot die van de ander binnen is: een bericht dat precies bij het openen van het kanaal wordt verstuurd, kwam in de test 1 op de 10 keer niet aan.
+- Elke 4 s een `ping`; 45 s niets gehoord, of de pagina gaat dicht → de ander wint met "verbinding verbroken".
+- Code: `src/online.js` (verbinden, kamerscherm) en de sectie **ONLINE** in `src/engine.js` (spiegelen, afspelen, toevalsbron). Test: `test/online.mjs` speelt een heel potje tussen twee browsers met een eigen PeerServer en controleert na elke zet dat beide borden (gespiegeld) exact gelijk zijn.
+
+**Beperkingen van deze versie:**
+- Verbinden gaat via de gratis PeerJS-server (0.peerjs.com) en de openbare STUN/TURN-servers van PeerJS. Op strenge netwerken (school, werk) kan verbinden mislukken.
+- Geen bescherming tegen valsspelen: elke speler draait de regels zelf. Prima voor potjes met vrienden.
+- Geen herverbinden: verbinding weg = potje voorbij.
+- Geen klok (beide browsers zouden hun eigen tijd bijhouden).
+
+De rest van dit document is het plan voor later (optie C: een server die de regels controleert).
+
+---
+
+# Ontwerpvoorstel (vervolg)
 
 Status: voorstel (2026-10-10), ter bespreking met Koen en Claude. Randvoorwaarde: de client blijft een statische site op GitHub Pages.
 
