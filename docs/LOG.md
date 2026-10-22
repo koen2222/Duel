@@ -6,6 +6,24 @@ Nieuwste bovenaan. Formaat: datum — wie — wat.
 - #8: analyse in `docs/BALANS.md`, gemaakt met het nieuwe `tools/balans.mjs` (rekent met de echte regels uit de engine). Belangrijkste: 50 figuren hebben een van 4 sjabloonschijven; uitschieters Buidelstoot, Kiezelkop, Neveling; Tweede Kans en Verblinding leveren gemiddeld niets op.
 - Open vragen voor Koen: zie `docs/BALANS.md`, "Vragen aan Koen".
 
+## 2026-10-10 (middag) — Claude — save-sleutel
+- #17: profiel staat nu onder `schijfduel_profile`; `rondel_profile` (gedeeld met Rondel op hetzelfde domein) wordt alleen éénmalig overgenomen en daarna niet meer aangeraakt. Werkt live pas via de Vite-build (#2).
+- Rooktest: het vooraf ingestelde profiel was onvolledig en werd door `loadProfile` weggegooid; nu volledig, dus animaties echt uit (potje ~50 s i.p.v. ~2 min).
+
+## 2026-10-10 (middag) — Claude — online
+- #10: online spelen met een kamercode, zonder server (Koens keuze: optie A, eigen collectie). Lockstep: beide engines spelen hetzelfde potje; alleen zetten (gespiegeld) en één startgetal voor de schijven gaan over de lijn. Nieuw: `src/online.js`, sectie ONLINE in `src/engine.js`, knop Online in het menu, `test/online.mjs` (ook in de GitHub Action).
+- Getest: telkens een heel potje tussen twee browsers (tot 150 zetten, met aanvallen, kaarten en evoluties); de borden waren na elke zet aan beide kanten exact gelijk. Opgeven en wegvallende verbinding getest.
+- Nog niet: klok, herverbinden, bescherming tegen valsspelen (dat komt met #9 en een server, optie C).
+- De online-test vond een vastloper die ook solo bestaat (#22, sluipende figuur zet het bord op slot); de fix uit #23 zit daarom ook in deze branch.
+
+## 2026-10-10 (middag) — Claude — vliegende aanval
+- #22: vliegende/sluipende figuren konden bij een aanval verder lopen dan hun MP (omweg via `bfs` zonder over figuren te gaan). Nieuw: `standplaatsVoor(u, doel)`; `legalMoves` biedt alleen nog aanvallen aan vanaf een punt waar je kunt staan; speler en AI gebruiken dezelfde standplaats. Werkt live via de Vite-build (#2).
+
+## 2026-10-10 (middag) — Claude — plaatjes
+- #15: plaatjes van #11–#18 en #70/#74 op de juiste figuur gezet (alleen bestanden hernoemd, dex ongewijzigd).
+- #15: snippers van buurfiguren uit 36 plaatjes gehaald met het nieuwe `tools/snippers.py`; `skeleton.png` en `p109.png` bewust overgeslagen (losse vlammetjes/belletjes horen bij de figuur).
+- Open: #16 nieuw plaatje voor #74 Kiezelkop (lijkt nu op #75), #17 save-sleutel gedeeld met Rondel (vraag aan Koen).
+
 ## 2026-10-10 (middag) — Claude
 - #2: Vite-setup. Bron in `src/` (nieuw: `index.html`, `main.js`, `styles.css`), `npm run build` → `dist/`, GitHub Action `pages.yml` bouwt, draait de rooktest en publiceert. `test/smoke.mjs` accepteert nu een map (`node smoke.mjs ../dist`).
 - Getest: rooktest op `dist/` en op de oude build geslaagd; collectie- en uitlegscherm pixel-identiek aan de oude build, geen 404's of consolefouten.
