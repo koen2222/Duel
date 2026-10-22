@@ -1,7 +1,7 @@
 // Online spelen (#10): verbinden met een kamercode van 4 tekens, zonder eigen
 // server. PeerJS regelt de WebRTC-verbinding: aanmelden gaat via de gratis
 // PeerJS-server, daarna praten de twee browsers rechtstreeks met elkaar.
-// Het potje zelf speelt de engine (src/engine.js, zie de sectie ONLINE daar).
+// Het potje zelf speelt de engine (src/engine/, zie 08-online.js).
 // De engine roept window.SchijfduelNet aan; wij roepen zijn globale functies
 // startMatchFlow(), onlineStart(), onlineOntvang() en onlineVerbroken() aan.
 

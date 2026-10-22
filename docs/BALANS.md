@@ -3,7 +3,7 @@
 > Stand 2026-10-10, door Claude. **Alleen analyse**: de dex en de kaarten zijn niet gewijzigd. Koen beslist wat er verandert (zie "Vragen aan Koen").
 
 ## Hoe gemeten
-`node tools/balans.mjs` rekent voor elke figuur uit hoe een gevecht afloopt tegen elk van de 151 figuren. Het script leest de echte regels (`resolve()`, `buildSlotsFromDex()`, `applyPlateFx()` …) uit `src/engine.js`, dus het rekent altijd met de huidige spelregels. `spin()` kiest elk van de 96 vakken even vaak; het script rekent met precies die kansen (exact, geen simulatie).
+`node tools/balans.mjs` rekent voor elke figuur uit hoe een gevecht afloopt tegen elk van de 151 figuren. Het script leest de echte regels (`resolve()`, `buildSlotsFromDex()`, `applyPlateFx()` …) uit de engine (`src/engine/`), dus het rekent altijd met de huidige spelregels. `spin()` kiest elk van de 96 vakken even vaak; het script rekent met precies die kansen (exact, geen simulatie).
 
 - **Netto** = kans dat de tegenstander van het veld gaat (verslagen of naar de zijlijn) min de kans dat je zelf van het veld gaat, gemiddeld over alle tegenstanders. 0 = gemiddeld, +20 = duidelijk sterk.
 - **Niet meegenomen:** abilities (bijv. `sturdy`, `undying`), statussen, levels en evolutiebonus, posities op het bord en MP-voordeel. Dit meet dus alleen de schijf. Echte AI-tegen-AI-potjes als meetlat kunnen pas goed als de regels los van het scherm draaien (#9).
@@ -33,7 +33,7 @@
 
 ## Cijfers
 
-Gegenereerd met `node tools/balans.mjs` uit `src/dex.json` en `src/engine.js` (151 figuren).
+Gegenereerd met `node tools/balans.mjs` uit `src/dex.json` en `src/engine/` (151 figuren).
 
 ### Gemiddelde netto per zeldzaamheid en MP
 

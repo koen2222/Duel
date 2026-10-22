@@ -11,6 +11,10 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(fileURLToPath(import.meta.url)), '../dist'));
 const MAX_TURNS = Number(process.env.MAX_TURNS || 80);
+// Een potje kan eindigen zonder gevecht (bijv. een figuur loopt in 3 beurten het doel in).
+// Dan spelen we nog een potje, tot MAX_POTJES, zodat de test toch een gevecht ziet.
+const MAX_POTJES = Number(process.env.MAX_POTJES || 3);
+const MIN_GEVECHTEN = Number(process.env.MIN_GEVECHTEN || 1);
 const TYPES = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json' };
 
 function serve() {
@@ -52,52 +56,67 @@ const click = async (sel) => {
 };
 const visible = (sel) => page.$eval(sel, e => !!(e.offsetParent || e.classList.contains('active')) && getComputedStyle(e).display !== 'none').catch(() => false);
 
-await click('#tile-solo');
-await page.waitForSelector('#deck-overlay.active', { timeout: 5000 });
-await click('#btn-deck-random');
-await page.waitForFunction(() => !document.querySelector('#btn-deck-start').disabled, null, { timeout: 5000 });
-await click('#btn-deck-start');
-await page.waitForFunction(() => { const s = window.__rondelQA.state; return s && !s.over && s.turn === 'p1' && !document.querySelector('#vs-overlay.active'); }, null, { timeout: 15000 });
-console.log('Potje gestart');
+async function startPotje() {
+  await click('#tile-solo');
+  await page.waitForSelector('#deck-overlay.active', { timeout: 5000 });
+  await click('#btn-deck-random');
+  await page.waitForFunction(() => !document.querySelector('#btn-deck-start').disabled, null, { timeout: 5000 });
+  await click('#btn-deck-start');
+  await page.waitForFunction(() => { const s = window.__rondelQA.state; return s && !s.over && s.turn === 'p1' && !document.querySelector('#vs-overlay.active'); }, null, { timeout: 15000 });
+}
 
-let combats = 0, turns = 0, result = null;
+let combats = 0, turns = 0, result = null, potjes = 0;
 const st = () => page.evaluate(() => { const s = window.__rondelQA.state; return { over: s.over, turn: s.turn, locked: s.locked, left: s.actionsLeft, n: s.turnN }; });
 
-while (turns < MAX_TURNS) {
-  if (await visible('#btn-combat-continue')) { combats++; await click('#btn-combat-continue'); await page.waitForTimeout(150); continue; }
-  if (await page.$('#evo-overlay.active')) { await click('#btn-evo-nee'); continue; }
-  if (await page.$('#result-overlay.active')) { result = await page.$eval('#result-overlay', e => e.innerText.trim().split('\n')[0]); break; }
-  const s = await st();
-  turns = Math.floor(s.n / 2);
-  if (s.over) { await page.waitForTimeout(300); if (!(await page.$('#result-overlay.active'))) { result = 'potje voorbij'; break; } continue; }
-  if (s.turn !== 'p1' || s.locked || s.left <= 0) { await page.waitForTimeout(150); continue; }
-  // Kies een zet met de engine-helpers, voer hem uit met klikken.
-  const plan = await page.evaluate(() => {
-    const s = window.__rondelQA.state;
-    const mine = Object.values(s.units).filter(u => u.owner === 'p1');
-    for (const u of mine.filter(u => u.node)) { for (const t of legalMoves(u)) { const o = unitAt(t); if (o && o.owner === 'p2') return { uid: u.uid, node: t, kind: 'attack' }; } }
-    for (const u of mine.filter(u => u.node)) { const ms = [...legalMoves(u)].filter(t => !unitAt(t)); if (ms.length) { ms.sort((a, b) => distTo(a, 'G2') - distTo(b, 'G2')); if (distTo(ms[0], 'G2') < distTo(u.node, 'G2') || Math.random() < 0.5) return { uid: u.uid, node: ms[0], kind: 'move' }; } }
-    for (const uid of s.bench.p1) { const u = s.units[uid]; if (u.status.includes('wait')) continue; const ts = [...deployTargets(u)]; if (ts.length) { ts.sort((a, b) => distTo(a, 'G2') - distTo(b, 'G2')); return { uid, node: ts[0], kind: 'deploy', bench: s.bench.p1.indexOf(uid) }; } }
-    for (const u of mine.filter(u => u.node)) { const ms = [...legalMoves(u)]; if (ms.length) return { uid: u.uid, node: ms[0], kind: 'move' }; }
-    return null;
-  });
-  if (process.env.DEBUG) console.log(JSON.stringify(s), JSON.stringify(plan));
-  if (!plan) { await click('#btn-end-turn'); await page.waitForTimeout(300); continue; }
-  if (plan.kind === 'deploy') await click(`#board .bench-p1 .bench-fig:nth-of-type(${plan.bench + 1})`);
-  else await click(`#board [data-uid="${plan.uid}"]`);
-  await page.waitForTimeout(120);
-  if (process.env.DEBUG) console.log('  na klik figuur:', await page.evaluate(() => { const s = window.__rondelQA.state; return JSON.stringify({ sel: s.selected, pd: s.pendingDeploy, lt: [...(s.legalTargets || [])] }); }), await page.$$eval('[data-uid]', es => es.length));
-  await click(`#board [data-node="${plan.node}"]`);
-  await page.waitForTimeout(250);
-  const s2 = await st();
-  if (s2.n === s.n && s2.left === s.left && !s2.locked && !(await visible('#btn-combat-continue'))) {
-    // klik kwam niet aan: beurt beëindigen om vastlopen te voorkomen
-    await click('#btn-end-turn'); await page.waitForTimeout(300);
+while (combats < MIN_GEVECHTEN && potjes < MAX_POTJES) {
+  potjes++;
+  if (potjes > 1) {
+    console.log(`Potje ${potjes - 1}: ${turns} beurten, ${result || 'geen uitslag'}, ${combats} gevecht(en) tot nu; nog een potje.`);
+    // Het uitslagscherm komt pas na ~1 s; via de knop terug naar het menu.
+    if (await page.waitForSelector('#result-overlay.active', { timeout: 5000 }).catch(() => null)) await click('#btn-result-menu');
+    else await page.evaluate(() => goHome());
+    await page.waitForFunction(() => document.querySelector('#screen-home.active'), null, { timeout: 5000 });
+    turns = 0; result = null;
+  }
+  await startPotje();
+  console.log('Potje gestart');
+
+  while (turns < MAX_TURNS) {
+    if (await visible('#btn-combat-continue')) { combats++; await click('#btn-combat-continue'); await page.waitForTimeout(150); continue; }
+    if (await page.$('#evo-overlay.active')) { await click('#btn-evo-nee'); continue; }
+    if (await page.$('#result-overlay.active')) { result = await page.$eval('#result-overlay', e => e.innerText.trim().split('\n')[0]); break; }
+    const s = await st();
+    turns = Math.floor(s.n / 2);
+    if (s.over) { await page.waitForTimeout(300); if (!(await page.$('#result-overlay.active'))) { result = 'potje voorbij'; break; } continue; }
+    if (s.turn !== 'p1' || s.locked || s.left <= 0) { await page.waitForTimeout(150); continue; }
+    // Kies een zet met de engine-helpers, voer hem uit met klikken.
+    const plan = await page.evaluate(() => {
+      const s = window.__rondelQA.state;
+      const mine = Object.values(s.units).filter(u => u.owner === 'p1');
+      for (const u of mine.filter(u => u.node)) { for (const t of legalMoves(u)) { const o = unitAt(t); if (o && o.owner === 'p2') return { uid: u.uid, node: t, kind: 'attack' }; } }
+      for (const u of mine.filter(u => u.node)) { const ms = [...legalMoves(u)].filter(t => !unitAt(t)); if (ms.length) { ms.sort((a, b) => distTo(a, 'G2') - distTo(b, 'G2')); if (distTo(ms[0], 'G2') < distTo(u.node, 'G2') || Math.random() < 0.5) return { uid: u.uid, node: ms[0], kind: 'move' }; } }
+      for (const uid of s.bench.p1) { const u = s.units[uid]; if (u.status.includes('wait')) continue; const ts = [...deployTargets(u)]; if (ts.length) { ts.sort((a, b) => distTo(a, 'G2') - distTo(b, 'G2')); return { uid, node: ts[0], kind: 'deploy', bench: s.bench.p1.indexOf(uid) }; } }
+      for (const u of mine.filter(u => u.node)) { const ms = [...legalMoves(u)]; if (ms.length) return { uid: u.uid, node: ms[0], kind: 'move' }; }
+      return null;
+    });
+    if (process.env.DEBUG) console.log(JSON.stringify(s), JSON.stringify(plan));
+    if (!plan) { await click('#btn-end-turn'); await page.waitForTimeout(300); continue; }
+    if (plan.kind === 'deploy') await click(`#board .bench-p1 .bench-fig:nth-of-type(${plan.bench + 1})`);
+    else await click(`#board [data-uid="${plan.uid}"]`);
+    await page.waitForTimeout(120);
+    if (process.env.DEBUG) console.log('  na klik figuur:', await page.evaluate(() => { const s = window.__rondelQA.state; return JSON.stringify({ sel: s.selected, pd: s.pendingDeploy, lt: [...(s.legalTargets || [])] }); }), await page.$$eval('[data-uid]', es => es.length));
+    await click(`#board [data-node="${plan.node}"]`);
+    await page.waitForTimeout(250);
+    const s2 = await st();
+    if (s2.n === s.n && s2.left === s.left && !s2.locked && !(await visible('#btn-combat-continue'))) {
+      // klik kwam niet aan: beurt beëindigen om vastlopen te voorkomen
+      await click('#btn-end-turn'); await page.waitForTimeout(300);
+    }
   }
 }
 
-console.log(`Beurten: ${turns}, gevechten: ${combats}, resultaat: ${result || 'geen (max beurten)'}`);
+console.log(`Potjes: ${potjes}, beurten (laatste potje): ${turns}, gevechten: ${combats}, resultaat: ${result || 'geen (max beurten)'}`);
 if (errors.length) fail('JS-fouten:\n  ' + errors.join('\n  '));
-if (combats < 1) fail('geen enkel gevecht gespeeld');
+if (combats < MIN_GEVECHTEN) fail(`te weinig gevechten (${combats}) in ${potjes} potje(s)`);
 if (!process.exitCode) console.log('OK: rooktest geslaagd');
 await browser.close(); if (srv) srv.close();

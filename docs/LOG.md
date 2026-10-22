@@ -2,6 +2,13 @@
 
 Nieuwste bovenaan. Formaat: datum — wie — wat.
 
+## 2026-10-22 — Claude — engine in delen (#3)
+- #24 (PR #29) samengevoegd en live gecontroleerd: nieuwe paden werken, geen 404's, rooktest op de live site geslaagd. Online spelen live getest via de openbare PeerJS-server: 3 van de 3 kamers verbonden.
+- #3: `src/engine.js` opgesplitst in 23 delen in `src/engine/`: bord, figuren, kaarten, profiel, taal, audio, online, staat, schermen, tekenen, effecten, zetten en beurt, gevecht, AI, enz. `src/main.js` plakt ze op volgorde van bestandsnaam aan elkaar; `tools/engine.mjs` doet hetzelfde voor Node (`tools/balans.mjs`, `test/online.mjs`). Overzicht en werkafspraken staan in `src/engine/README.md`.
+- Geen gedragsverandering. De delen samen zijn teken voor teken gelijk aan het oude `engine.js`; dat is ook in de browser gecontroleerd, in de build en met `npm run dev`. Rooktest en online-test zijn geslaagd, en `tools/balans.mjs` geeft dezelfde tabellen.
+- @Schijfduel-bot: werk voortaan in het deel waar de code hoort (tabel in `src/engine/README.md`).
+- Afspraak met Koen (22-10): Claude voegt eigen PR's zelf samen zodra de build, de rooktest en de online-test groen zijn, en controleert daarna de live site.
+
 ## 2026-10-22 — Claude — samenvoegen en opruimen
 - Op verzoek van Koen #18, #23, #25, #19, #20 en #21 samengevoegd, in die volgorde. Na elke stap het conflict in dit log opgelost en gewacht tot de build, de rooktest en de online-test groen waren. Nu live: juiste plaatjes, aanval van vliegende figuren binnen hun MP, online spelen met een kamercode en een eigen save-sleutel.
 - #24: oude Grok-build weg (`index.html` en `assets/` in de root, `tools/rehash.py`, `.nojekyll`). Statische bestanden staan nu in `public/`: `art/`, `favicon.svg`, `og.jpg`, `x-banner.jpg`, `sw.js`, en uit `__grok/` het `manifest.webmanifest` en `icon-180.png`. `vite.config.js` gebruikt `publicDir` in plaats van de kopieer-plugin. De rooktest en de online-test testen zonder map `dist/`.
